@@ -7,8 +7,6 @@ using System.Numerics;
 using GameServerLib.Extensions;
 using GameServerCore.Enums;
 using LeagueSandbox.GameServer.GameObjects;
-using System.Linq;
-using GameMaths;
 
 namespace LeagueSandbox.GameServer.Content.Navigation
 {
@@ -171,170 +169,7 @@ namespace LeagueSandbox.GameServer.Content.Navigation
             }
         }
 
-        /// <summary>
-        /// Finds a path of waypoints, which are aligned by the cells of the navgrid (A* method), that lead to a set destination.
-        /// </summary>
-        /// <param name="from">Point that the path starts at.</param>
-        /// <param name="to">Point that the path ends at.</param>
-        /// <param name="distanceThreshold">Amount of distance away from terrain that the path should be.</param>
-        /// <returns>List of points forming a path in order: from -> to</returns>
-        public List<Vector2> GetPath(Vector2 from, Vector2 to, float distanceThreshold = 0)
-        {
-            if(from == to)
-            {
-                return null;
-            }
-            
-            var fromNav = TranslateToNavGrid(from);
-            var cellFrom = GetCell(fromNav, false);
-            //var goal = GetClosestWalkableCell(to, distanceThreshold, true);
-            to = GetClosestTerrainExit(to, distanceThreshold);
-            var toNav = TranslateToNavGrid(to);
-            var cellTo = GetCell(toNav, false);
-            
-            if (cellFrom == null || cellTo == null)
-            {
-                return null;
-            }
-            if(cellFrom.ID == cellTo.ID)
-            {
-                return new List<Vector2>(2){ from, to };
-            }
 
-            // A size large enough not to relocate the array while playing Summoner's Rift
-            var priorityQueue = new PriorityQueue<(List<NavigationGridCell>, float), float>(1024);
-            
-            var start = new List<NavigationGridCell>(1);
-            start.Add(cellFrom);
-            priorityQueue.Enqueue((start, 0), Vector2.Distance(fromNav, toNav));
-
-            var closedList = new HashSet<int>();
-            closedList.Add(cellFrom.ID);
-
-            List<NavigationGridCell> path = null;
-
-            // while there are still paths to explore
-            while (true)
-            {
-                if (!priorityQueue.TryDequeue(out var element, out _))
-                {
-                    // no solution
-                    return null;
-                }
-
-                float currentCost = element.Item2;
-                path = element.Item1;
-
-                NavigationGridCell cell = path[path.Count - 1];
-
-                // found the min solution and return it (path)
-                if (cell.ID == cellTo.ID)
-                {
-                    break;
-                }
-
-                foreach (NavigationGridCell neighborCell in GetCellNeighbors(cell))
-                {
-                    // if the neighbor is in the closed list - skip
-                    if (closedList.Contains(neighborCell.ID))
-                    {
-                        continue;
-                    }
-
-                    Vector2 neighborCellCoord = toNav;
-                    // The target point is always walkable,
-                    // we made sure of this at the beginning of the function
-                    if(neighborCell.ID != cellTo.ID)
-                    {
-                        neighborCellCoord = neighborCell.GetCenter();
-                        
-                        Vector2 cellCoord = fromNav;
-                        if(cell.ID != cellFrom.ID)
-                        {
-                            cellCoord = cell.GetCenter();
-                        }
-
-                        // close cell if not walkable or circle LOS check fails (start cell skipped as it always fails)
-                        if
-                        (
-                            CastCircle(cellCoord, neighborCellCoord, distanceThreshold, false)
-                        )
-                        {
-                            closedList.Add(neighborCell.ID);
-                            continue;
-                        }
-                    }
-
-                    // calculate the new path and cost +heuristic and add to the priority queue
-                    var npath = new List<NavigationGridCell>(path.Count + 1);
-                    foreach(var pathCell in path)
-                    {
-                        npath.Add(pathCell);
-                    }
-                    npath.Add(neighborCell);
-
-                    // add 1 for every cell used
-                    float cost = currentCost + 1
-                        + neighborCell.ArrivalCost
-                        + neighborCell.AdditionalCost;
-                    
-                    priorityQueue.Enqueue(
-                        (npath, cost), cost
-                        + neighborCell.Heuristic
-                        + Vector2.Distance(neighborCellCoord, toNav)
-                    );
-
-                    closedList.Add(neighborCell.ID);
-                }
-            }
-
-            // shouldn't happen usually
-            if (path == null)
-            {
-                return null;
-            }
-
-            SmoothPath(path, distanceThreshold);
-
-            var returnList = new List<Vector2>(path.Count);
-            
-            returnList.Add(from);
-            for (int i = 1; i < path.Count - 1; i++)
-            {
-                var navGridCell = path[i];
-                returnList.Add(TranslateFromNavGrid(navGridCell.Locator));
-            }
-            returnList.Add(to);
-
-            return returnList;
-        }
-
-        /// <summary>
-        /// Remove waypoints (cells) that have LOS from one to the other from path.
-        /// </summary>
-        /// <param name="path"></param>
-        private void SmoothPath(List<NavigationGridCell> path, float checkDistance = 0f)
-        {
-            if(path.Count < 3)
-            {
-                return;
-            }
-            int j = 0;
-            // The first point remains untouched.
-            for(int i = 2; i < path.Count; i++)
-            {
-                // If there is something between the last added point and the current one
-                if(CastCircle(path[j].GetCenter(), path[i].GetCenter(), checkDistance, false))
-                {
-                    // add previous.
-                    path[++j] = path[i - 1];
-                }
-            }
-            // Add last.
-            path[++j] = path[path.Count - 1];
-            j++; // Remove everything after.
-            path.RemoveRange(j, path.Count - j);
-        }
 
         /// <summary>
         /// Translates the given Vector2 into cell format where each unit is a cell.
@@ -406,7 +241,7 @@ namespace LeagueSandbox.GameServer.Content.Navigation
         /// </summary>
         /// <param name="cell">Cell to start the check at.</param>
         /// <returns>List of neighboring cells.</returns>
-        private List<NavigationGridCell> GetCellNeighbors(NavigationGridCell cell)
+        public List<NavigationGridCell> GetCellNeighbors(NavigationGridCell cell)
         {
             List<NavigationGridCell> neighbors = new List<NavigationGridCell>(9);
             for (short dirY = -1; dirY <= 1; dirY++)
@@ -460,7 +295,7 @@ namespace LeagueSandbox.GameServer.Content.Navigation
         /// <param name="origin">Vector2 with normal coordinates to start the check.</param>
         /// <param name="radius">Range to check around the origin.</param>
         /// <returns>List of all cells in range. Null if range extends outside of NavigationGrid boundaries.</returns>
-        private IEnumerable<NavigationGridCell> GetAllCellsInRange(Vector2 origin, float radius, bool translate = true)
+        public IEnumerable<NavigationGridCell> GetAllCellsInRange(Vector2 origin, float radius, bool translate = true)
         {
             radius /= CellSize;
             if(translate)
@@ -709,7 +544,7 @@ namespace LeagueSandbox.GameServer.Content.Navigation
         }
 
         // https://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
-        private IEnumerable<NavigationGridCell> GetAllCellsInLine(Vector2 v0, Vector2 v1)
+        public IEnumerable<NavigationGridCell> GetAllCellsInLine(Vector2 v0, Vector2 v1)
         {
             double dx = Math.Abs(v1.X - v0.X);
             double dy = Math.Abs(v1.Y - v0.Y);
@@ -784,61 +619,6 @@ namespace LeagueSandbox.GameServer.Content.Navigation
             }
         }
 
-        public bool CastCircle(Vector2 orig, Vector2 dest, float radius, bool translate = true)
-        {
-            if(translate)
-            {
-                orig = TranslateToNavGrid(orig);
-                dest = TranslateToNavGrid(dest);
-            }
-            
-            float tradius = radius / CellSize;
-            Vector2 p = (dest - orig).Normalized().Perpendicular() * tradius;
-
-            var cells = GetAllCellsInRange(orig, radius, false)
-            .Concat(GetAllCellsInRange(dest, radius, false))
-            .Concat(GetAllCellsInLine(orig + p, dest + p))
-            .Concat(GetAllCellsInLine(orig - p, dest - p));
-
-            int minY = (int)(Math.Min(orig.Y, dest.Y) - tradius) - 1;
-            int maxY = (int)(Math.Max(orig.Y, dest.Y) + tradius) + 1;
-
-            int countY = maxY - minY + 1;
-            var xRanges = new short[countY, 3];
-            foreach(var cell in cells)
-            {
-                if(!IsWalkable(cell))
-                {
-                    return true;
-                }
-                int y = cell.Locator.Y - minY;
-                if(xRanges[y, 2] == 0)
-                {
-                    xRanges[y, 0] = cell.Locator.X;
-                    xRanges[y, 1] = cell.Locator.X;
-                    xRanges[y, 2] = 1;
-                }
-                else
-                {
-                    xRanges[y, 0] = Math.Min(xRanges[y, 0], cell.Locator.X);
-                    xRanges[y, 1] = Math.Max(xRanges[y, 1], cell.Locator.X);
-                }
-            }
-
-            for(int y = 0; y < countY; y++)
-            {
-                for(int x = xRanges[y, 0] + 1; x < xRanges[y, 1]; x++)
-                {
-                    if(!IsWalkable(GetCell((short)x, (short)(minY + y))))
-                    {
-                        return true;
-                    }
-                }
-            }
-            
-            return false;
-        }
-
         /// <summary>
         /// Casts a ray in the given direction and returns false when failed, with a stopping position, or true on success with the given destination.
         /// *NOTE*: Is not actually infinite, just travels (direction * 1024) units ahead of the given origin.
@@ -868,30 +648,6 @@ namespace LeagueSandbox.GameServer.Content.Navigation
             Vector2 destination = b.Position - d * b.PathfindingRadius;
 
             return CastRay(origin, destination, !checkVision, checkVision);
-        }
-
-        /// <summary>
-        /// Gets the closest pathable position to the given position. *NOTE*: Computationally heavy, use sparingly.
-        /// </summary>
-        /// <param name="location">Vector2 position to start the check at.</param>
-        /// <param name="distanceThreshold">Amount of distance away from terrain the exit should be.</param>
-        /// <returns>Vector2 position which can be pathed on.</returns>
-        public Vector2 GetClosestTerrainExit(Vector2 location, float distanceThreshold = 0)
-        {
-            double angle = Math.PI / 4;
-
-            // x = r * cos(angle)
-            // y = r * sin(angle)
-            // r = distance from center
-            // Draws spirals until it finds a walkable spot
-            for (int r = 1; !IsWalkable(location, distanceThreshold); r++)
-            {
-                location.X += r * (float)Math.Cos(angle);
-                location.Y += r * (float)Math.Sin(angle);
-                angle += Math.PI / 4;
-            }
-
-            return location;
         }
 
         public NavigationGridCell GetClosestWalkableCell(Vector2 coords, float distanceThreshold = 0, bool translate = true)

@@ -8,16 +8,21 @@ using System.Collections.Generic;
 using System;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
+using LeagueSandbox.GameServer.Logging;
+using log4net;
 
 namespace AIScripts
 {
     public class LaneMinionAI : IAIScript
     {
-        public AIScriptMetaData AIScriptMetaData { get; set; } = new AIScriptMetaData
+
+		private static ILog _logger = LoggerProvider.GetLogger();
+
+		public AIScriptMetaData AIScriptMetaData { get; set; } = new AIScriptMetaData
         {
             HandlesCallsForHelp = true
         };
-        LaneMinion LaneMinion;
+        LaneMinion thisMinion;
         int currentWaypointIndex = 0;
         float minionActionTimer = 250f;
         bool targetIsStillValid = false;
@@ -32,7 +37,7 @@ namespace AIScripts
         private bool hadTarget = false;
         private bool TargetJustDied()
         {
-            targetIsStillValid = IsValidTarget(LaneMinion.TargetUnit);
+            targetIsStillValid = IsValidTarget(thisMinion.TargetUnit);
             if(targetIsStillValid)
             {
                 hadTarget = true;
@@ -47,17 +52,17 @@ namespace AIScripts
 
         public void OnActivate(ObjAIBase owner)
         {
-            LaneMinion = owner as LaneMinion;
+            thisMinion = owner as LaneMinion;
         }
         
         public void OnUpdate(float delta)
         {
             localTime += delta;
 
-            if(LaneMinion != null && !LaneMinion.IsDead)
+            if(thisMinion != null && !thisMinion.IsDead)
             {
 
-                if(LaneMinion.IsAttacking || LaneMinion.TargetUnit == null)
+                if(thisMinion.IsAttacking || thisMinion.TargetUnit == null)
                 {
                     timeSinceLastAttack = 0f;
                 }
@@ -73,7 +78,7 @@ namespace AIScripts
                     //       of the normal sweep through the AI Priority List:
                     //Quote: Taunt/Fear/Flee/Movement Disable/Attack Disable.
                     //       All of these cause a minion to freshly reevaluate its behavior immediately.
-                    LaneMinion.MovementParameters == null
+                    thisMinion.MovementParameters == null
                     //Quote: Collisions.
                     //       Minions that end up overlapping other minions will reevaluate their behavior immediately.
                     //&& !LaneMinion.RecalculateAttackPosition()
@@ -87,7 +92,7 @@ namespace AIScripts
                     )
                 ) {
                     OrderType nextBehaviour = ReevaluateBehavior(delta);
-                    LaneMinion.UpdateMoveOrder(nextBehaviour);
+                    thisMinion.UpdateMoveOrder(nextBehaviour);
                     minionActionTimer = 0;
                 }
 
@@ -105,7 +110,7 @@ namespace AIScripts
             {
                 int priority = Math.Min(
                     unitsAttackingAllies.GetValueOrDefault(attacker, (int)ClassifyUnit.DEFAULT),
-                    (int)LaneMinion.ClassifyTarget(attacker, victium)
+                    (int)thisMinion.ClassifyTarget(attacker, victium)
                 );
                 unitsAttackingAllies[attacker] = priority;
             }
@@ -113,7 +118,7 @@ namespace AIScripts
 
         bool UnitInRange(AttackableUnit u, float range)
         {
-            return Vector2.DistanceSquared(LaneMinion.Position, u.Position) < (range * range);
+            return Vector2.DistanceSquared(thisMinion.Position, u.Position) < (range * range);
         }
 
         bool IsValidTarget(AttackableUnit u)
@@ -121,9 +126,9 @@ namespace AIScripts
             return (
                 u != null
                 && !u.IsDead
-                && u.Team != LaneMinion.Team
-                && UnitInRange(u, LaneMinion.Stats.AcquisitionRange.Total)
-                && u.IsVisibleByTeam(LaneMinion.Team)
+                && u.Team != thisMinion.Team
+                && UnitInRange(u, thisMinion.Stats.AcquisitionRange.Total)
+                && u.IsVisibleByTeam(thisMinion.Team)
                 && u.Status.HasFlag(StatusFlags.Targetable)
                 && !UnitIsProtectionActive(u)
             );
@@ -155,15 +160,15 @@ namespace AIScripts
             AttackableUnit currentTarget = null;
             AttackableUnit nextTarget = currentTarget;
             int nextTargetPriority = (int)ClassifyUnit.DEFAULT;
-            float acquisitionRange = LaneMinion.Stats.AcquisitionRange.Total;
+            float acquisitionRange = thisMinion.Stats.AcquisitionRange.Total;
             float nextTargetDistanceSquared = acquisitionRange * acquisitionRange;
             int nextTargetAttackers = 0;
             if(targetIsStillValid)
             {
-                currentTarget = LaneMinion.TargetUnit;
+                currentTarget = thisMinion.TargetUnit;
                 nextTarget = currentTarget;
                 nextTargetPriority = targetUnitPriority;
-                nextTargetDistanceSquared = Vector2.DistanceSquared(LaneMinion.Position, nextTarget.Position);
+                nextTargetDistanceSquared = Vector2.DistanceSquared(thisMinion.Position, nextTarget.Position);
                 nextTargetAttackers = 0; //LaneMinion.IsMelee ? CountUnitsAttackingUnit(nextTarget) : 0; // First Wave Behaviour is unfinished
             }
             
@@ -180,7 +185,7 @@ namespace AIScripts
             }
             else
             {
-                nearestObjects = EnumerateUnitsInRange(LaneMinion.Position, acquisitionRange, true);
+                nearestObjects = EnumerateUnitsInRange(thisMinion.Position, acquisitionRange, true);
             }
             foreach (var it in nearestObjects)
             {
@@ -188,9 +193,9 @@ namespace AIScripts
                 {
                     int priority = unitsAttackingAllies.ContainsKey(u) ?
                         unitsAttackingAllies[u]
-                        : (int)LaneMinion.ClassifyTarget(u)
+                        : (int)thisMinion.ClassifyTarget(u)
                     ;
-                    float distanceSquared = Vector2.DistanceSquared(LaneMinion.Position, u.Position);
+                    float distanceSquared = Vector2.DistanceSquared(thisMinion.Position, u.Position);
                     int attackers = 0; //LaneMinion.IsMelee ? CountUnitsAttackingUnit(u) : 0; // First Wave Behaviour is unfinished
                     if (
                         nextTarget == null
@@ -217,7 +222,7 @@ namespace AIScripts
             if(nextTarget != null && nextTarget != currentTarget)
             {
                 // This is the only place where the target is set
-                LaneMinion.SetTargetUnit(nextTarget, true);
+                thisMinion.SetTargetUnit(nextTarget, true);
                 targetUnitPriority = nextTargetPriority;
                 timeSinceLastAttack = 0f;
                 followsWaypoints = false;
@@ -229,19 +234,19 @@ namespace AIScripts
 
         bool WaypointReached()
         {
-            Vector2 currentWaypoint = LaneMinion.PathingWaypoints[currentWaypointIndex];
+            Vector2 currentWaypoint = thisMinion.PathingWaypoints[currentWaypointIndex];
 
-            float radius = LaneMinion.CollisionRadius;
-            Vector2 center = LaneMinion.Position;
+            float radius = thisMinion.CollisionRadius;
+            Vector2 center = thisMinion.Position;
 
-            var nearestMinions = EnumerateUnitsInRange(LaneMinion.Position, LaneMinion.Stats.AcquisitionRange.Total, true)
+            var nearestMinions = EnumerateUnitsInRange(thisMinion.Position, thisMinion.Stats.AcquisitionRange.Total, true)
                                 .OfType<LaneMinion>()
-                                .OrderBy(minion => Vector2.DistanceSquared(LaneMinion.Position, minion.Position) - minion.CollisionRadius);
+                                .OrderBy(minion => Vector2.DistanceSquared(thisMinion.Position, minion.Position) - minion.CollisionRadius);
 
             // This is equivalent to making any colliding minions equal to a single minion to save on pathfinding resources.
             foreach (LaneMinion minion in nearestMinions)
             {
-                if(minion != LaneMinion){
+                if(minion != thisMinion){
                     // If the closest minion is in collision range, add its collision radius to the waypoint success range.
                     if (GameServerCore.Extensions.IsVectorWithinRange(minion.Position, center, radius + minion.CollisionRadius))
                     {
@@ -279,7 +284,7 @@ namespace AIScripts
                 //Quote: If they have failed to attack their target for 4 seconds, they temporarily ignore them instead.
                 if(timeSinceLastAttack >= 4000f)
                 {
-                    Ignore(LaneMinion.TargetUnit);
+                    Ignore(thisMinion.TargetUnit);
                     targetIsStillValid = false;
                 }
                 else
@@ -295,16 +300,16 @@ namespace AIScripts
             {
                 return OrderType.AttackTo;
             }
-            else if(LaneMinion.TargetUnit != null)
+            else if(thisMinion.TargetUnit != null)
             {
-                LaneMinion.CancelAutoAttack(false, true);
-                LaneMinion.SetTargetUnit(null, true);
+                thisMinion.CancelAutoAttack(false, true);
+                thisMinion.SetTargetUnit(null, true);
             }
             
             //Quote: Check if near a target waypoint, if so change the target waypoint to the next in the line.
             bool notYetOutOfRange = true;
             while(
-                (notYetOutOfRange = currentWaypointIndex < LaneMinion.PathingWaypoints.Count)
+                (notYetOutOfRange = currentWaypointIndex < thisMinion.PathingWaypoints.Count)
                 && WaypointReached()
             ) {
                 currentWaypointIndex++;
@@ -313,8 +318,8 @@ namespace AIScripts
             //Quote: Walk towards the target waypoint.
             if(notYetOutOfRange)
             {
-                Vector2 currentWaypoint = LaneMinion.PathingWaypoints[currentWaypointIndex];
-                Vector2 currentDestination = LaneMinion.Waypoints[LaneMinion.Waypoints.Count - 1];
+                Vector2 currentWaypoint = thisMinion.PathingWaypoints[currentWaypointIndex];
+                Vector2 currentDestination = thisMinion.Waypoints[thisMinion.Waypoints.Count - 1];
 
                 if(currentDestination != currentWaypoint)
                 {
@@ -325,23 +330,23 @@ namespace AIScripts
                     if(!followsWaypoints)
                     {
                         followsWaypoints = true;
-                        path = GetPath(LaneMinion.Position, currentWaypoint, LaneMinion.PathfindingRadius);
+                        path = GetPath(thisMinion.Position, currentWaypoint, thisMinion, thisMinion.PathfindingRadius);
                     }
 
                     if(path == null)
                     {
                         path = new List<Vector2>()
                         {
-                            LaneMinion.Position,
+                            thisMinion.Position,
                             currentWaypoint
                         };
                     }
-                    LaneMinion.SetWaypoints(path);
+                    thisMinion.SetWaypoints(path);
                 }
-                
-                // It might be better to use the AttackMove state,
-                // but it forces ObjAIBase to look for a target instead of LaneMinionAI 
-                return OrderType.MoveTo;
+
+				// It might be better to use the AttackMove state,
+				// but it forces ObjAIBase to look for a target instead of LaneMinionAI 
+				return OrderType.MoveTo;
             }
 
             return OrderType.Stop;

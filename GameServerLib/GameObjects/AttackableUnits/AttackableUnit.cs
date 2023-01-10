@@ -212,8 +212,8 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 // Reevaluate our current path to account for the starting position being changed.
                 if (repath)
                 {
-                    Vector2 safeExit = _game.Map.NavigationGrid.GetClosestTerrainExit(Waypoints.Last(), PathfindingRadius);
-                    List<Vector2> safePath = _game.Map.PathingHandler.GetPath(Position, safeExit, PathfindingRadius);
+                    Vector2 safeExit = _game.Map.PathingHandler.GetClosestTerrainExit(Waypoints.Last(), PathfindingRadius);
+                    List<Vector2> safePath = _game.Map.PathingHandler.GetPath(Position, safeExit, this, PathfindingRadius);
 
                     // TODO: When using this safePath, sometimes we collide with the terrain again, so we use an unsafe path the next collision, however,
                     // sometimes we collide again before we can finish the unsafe path, so we end up looping collisions between safe and unsafe paths, never actually escaping (ex: sharp corners).
@@ -293,11 +293,11 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 }
 
                 // only time we would collide with terrain is if we are inside of it, so we should teleport out of it.
-                Vector2 exit = _game.Map.NavigationGrid.GetClosestTerrainExit(Position, PathfindingRadius + 1.0f);
+                Vector2 exit = _game.Map.PathingHandler.GetClosestTerrainExit(Position, PathfindingRadius + 1.0f);
                 SetPosition(exit, false);
             }
-            else
-            {
+			else // Fedacking: Collission with units presumably?
+			{
                 ApiEventManager.OnCollision.Publish(this, collider);
 
                 if (MovementParameters != null || Status.HasFlag(StatusFlags.Ghosted)
@@ -312,9 +312,9 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 Vector2 exit = Extensions.GetCircleEscapePoint(Position, PathfindingRadius + 1, collider.Position, collider.PathfindingRadius);
                 if (!_game.Map.PathingHandler.IsWalkable(exit, PathfindingRadius))
                 {
-                    exit = _game.Map.NavigationGrid.GetClosestTerrainExit(exit, PathfindingRadius + 1.0f);
+                    exit = _game.Map.PathingHandler.GetClosestTerrainExit(exit, PathfindingRadius + 1.0f);
                 }
-                SetPosition(exit, false);
+                //SetPosition(exit, true);
             }
         }
 
@@ -846,7 +846,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
             _movementUpdated = true;
             _teleportedDuringThisFrame = true;
 
-            position = _game.Map.NavigationGrid.GetClosestTerrainExit(position, PathfindingRadius + 1.0f);
+            position = _game.Map.PathingHandler.GetClosestTerrainExit(position, PathfindingRadius + 1.0f);
 
             if (repath)
             {
@@ -973,8 +973,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
 
             if (CanChangeWaypoints())
             {
-                var nav = _game.Map.NavigationGrid;
-                var path = nav.GetPath(Position, location, PathfindingRadius);
+                var path = _game.Map.PathingHandler.GetPath(Position, location, this, PathfindingRadius);
                 if (path != null)
                 {
                     SetWaypoints(path); // resets `PathHasTrueEnd`
@@ -1521,7 +1520,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
         /// TODO: Implement Dash class which houses these parameters, then have that as the only parameter to this function (and other Dash-based functions).
         public void DashToLocation(Vector2 endPos, float dashSpeed, string animation = "", float leapGravity = 0.0f, bool keepFacingLastDirection = true, bool consideredCC = true)
         {
-            var newCoords = _game.Map.NavigationGrid.GetClosestTerrainExit(endPos, PathfindingRadius + 1.0f);
+            var newCoords = _game.Map.PathingHandler.GetClosestTerrainExit(endPos, PathfindingRadius + 1.0f);
 
             // False because we don't want this to be networked as a normal movement.
             SetWaypoints(new List<Vector2> { Position, newCoords });

@@ -30,7 +30,7 @@ namespace LeagueSandbox.GameServer.Packets.PacketHandlers
             var champion = peerInfo.Champion;
             if (champion.MovementParameters == null)
             {
-                var nav = _game.Map.NavigationGrid;
+                var pathfinder = _game.Map.PathingHandler;
 
                 var u = _game.ObjectManager.GetObjectById(req.TargetNetID) as AttackableUnit;
                 var pet = champion.GetPet();
@@ -51,11 +51,11 @@ namespace LeagueSandbox.GameServer.Packets.PacketHandlers
                         waypoints[0] = champion.Position;
                         for(int i = 0; i < waypoints.Count - 1; i++)
                         {
-                            if(nav.CastCircle(waypoints[i], waypoints[i + 1], champion.PathfindingRadius, true))
+                            if(pathfinder.CastCircle(waypoints[i], waypoints[i + 1], champion.PathfindingRadius, true))
                             {
                                 var ithWaypoint = waypoints[i];
                                 var lastWaypoint = waypoints[waypoints.Count - 1];
-                                var path = nav.GetPath(ithWaypoint, lastWaypoint, champion.PathfindingRadius);
+                                var path = pathfinder.GetPath(ithWaypoint, lastWaypoint, champion, champion.PathfindingRadius);
                                 waypoints.RemoveRange(i, waypoints.Count - i);
                                 if(path != null)
                                 {
@@ -77,7 +77,7 @@ namespace LeagueSandbox.GameServer.Packets.PacketHandlers
                     case OrderType.PetHardReturn:
                         if (pet != null)
                         {
-                            waypoints = nav.GetPath(pet.Position, req.Position, pet.PathfindingRadius);
+                            waypoints = pathfinder.GetPath(pet.Position, req.Position, champion, pet.PathfindingRadius);
                             if (waypoints == null)
                             {
                                 return false;
