@@ -312,3 +312,8 @@ GameServer/Settings/GameInfo.json
 GameServerConsole/Settings/GameInfo.json
 GameServerConsole/Settings/GameServerSettings.json
 MigrationBackup/
+
+# Helper python scripts stuff
+HelperScripts/.idea/*
+HelperScripts/output/*
+HelperScripts/input/*
