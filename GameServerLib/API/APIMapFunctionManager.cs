@@ -25,7 +25,9 @@ namespace LeagueSandbox.GameServer.API
         // Required variables.
         private static Game _game;
         private static ILog _logger = LoggerProvider.GetLogger();
-        private static MapScriptHandler _map;
+        
+        // Ugly hack, this should be private
+        public static MapScriptHandler _map;
 
         /// <summary>
         /// Sets the Game instance of ApiFunctionManager to the given instance.

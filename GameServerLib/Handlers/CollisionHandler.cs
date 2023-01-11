@@ -138,7 +138,7 @@ namespace LeagueSandbox.GameServer.Handlers
         {
             if (IsCollisionAffected(obj))
             {
-                if (!_map.PathingHandler.IsWalkable(obj.Position))
+                if (!_map.PathingHandler.IsWalkable(obj.Position, obj))
                 {
                     obj.OnCollision(null, true);
                 }

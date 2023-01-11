@@ -653,7 +653,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
                 }
                 else
                 {
-                    if (!_game.Map.PathingHandler.IsWalkable(targetPos, PathfindingRadius))
+                    if (!_game.Map.PathingHandler.IsWalkable(targetPos, this, PathfindingRadius))
                     {
                         targetPos = _game.Map.NavigationGrid.GetClosestTerrainExit(targetPos, PathfindingRadius);
                     }

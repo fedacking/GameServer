@@ -253,9 +253,9 @@ namespace LeagueSandbox.GameServer.API
         /// <param name="y">Y coordinate.</param>
         /// <param name="checkRadius">Radius around the given point to check for walkability.</param>
         /// <returns>True/False</returns>
-        public static bool IsWalkable(float x, float y, float checkRadius = 0)
+        public static bool IsWalkable(float x, float y, AttackableUnit traveler, float checkRadius = 0)
         {
-            return _game.Map.PathingHandler.IsWalkable(new Vector2(x, y), checkRadius);
+            return _game.Map.PathingHandler.IsWalkable(new Vector2(x, y), traveler, checkRadius);
         }
 
         /// <summary>

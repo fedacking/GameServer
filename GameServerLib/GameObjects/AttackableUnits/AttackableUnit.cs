@@ -17,6 +17,7 @@ using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
 using LeagueSandbox.GameServer.GameObjects.SpellNS.Missile;
 using LeagueSandbox.GameServer.GameObjects.SpellNS.Sector;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.Buildings;
+using GameMaths;
 
 namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
 {
@@ -306,15 +307,6 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 {
                     return;
                 }
-
-                // We should not teleport here because Pathfinding should handle it.
-                // TODO: Implement a PathfindingHandler, and remove currently implemented manual pathfinding.
-                Vector2 exit = Extensions.GetCircleEscapePoint(Position, PathfindingRadius + 1, collider.Position, collider.PathfindingRadius);
-                if (!_game.Map.PathingHandler.IsWalkable(exit, PathfindingRadius))
-                {
-                    exit = _game.Map.NavigationGrid.GetClosestTerrainExit(exit, PathfindingRadius + 1.0f);
-                }
-                SetPosition(exit, false);
             }
         }
 
@@ -918,42 +910,83 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
             return 0;
         }
 
-        /// <summary>
-        /// Moves this unit to its specified waypoints, updating its position along the way.
-        /// </summary>
-        /// <param name="diff">The amount of milliseconds the unit is supposed to move</param>
-        /// TODO: Implement interpolation (assuming all other desync related issues are already fixed).
-        public virtual bool Move(float delta)
+		/// <summary>
+		/// Moves this unit to its specified waypoints, updating its position along the way. 
+		/// </summary>
+		/// <param name="diff">The amount of milliseconds the unit is supposed to move</param>
+		/// <returns>Returns false if the unit is already at the last waypoint in it's path, true otherwise</returns>
+		/// TODO: Implement interpolation (assuming all other desync related issues are already fixed).
+		public virtual bool Move(float delta)
         {
-            if (CurrentWaypointKey < Waypoints.Count)
+            // We reached the end, so just return false
+            if (CurrentWaypointKey >= Waypoints.Count)
             {
-                float speed = GetMoveSpeed() * 0.001f;
-                var maxDist = speed * delta;
-
-                while (true)
-                {
-                    var dir = CurrentWaypoint - Position;
-                    var dist = dir.Length();
-
-                    if (maxDist < dist)
-                    {
-                        Position += dir / dist * maxDist;
-                        return true;
-                    }
-                    else
-                    {
-                        Position = CurrentWaypoint;
-                        maxDist -= dist;
-
-                        CurrentWaypointKey++;
-                        if (CurrentWaypointKey == Waypoints.Count || maxDist == 0)
-                        {
-                            return true;
-                        }
-                    }
-                }
+				return false;
             }
-            return false;
+
+			float speed = GetMoveSpeed() * 0.001f;
+			var maxDist = speed * delta;
+
+            // If we still have movement for the next move
+			while (CurrentWaypointKey < Waypoints.Count && MoveToNextWaypoint(maxDist) > 0)
+			{
+				CurrentWaypointKey++;
+			}
+
+            return true;
+		}
+
+		/// <summary>
+		/// Moves this unit to next waypoint
+		/// </summary>
+		/// <returns>Returns the available distance to move after moving</returns>
+		/// <param name="diff">The amount of milliseconds the unit is supposed to move</param>
+		public virtual float MoveToNextWaypoint(float maxDist)
+		{
+			var dir = CurrentWaypoint - Position;
+            var dist = dir.Length();
+            Vector2 newPosition;
+
+			if (maxDist < dist)
+			{
+				newPosition = Position + dir / dist * maxDist;
+                maxDist = 0;
+			}
+			else
+			{
+				newPosition = CurrentWaypoint;
+				maxDist -= dist;
+			}
+
+            // We check if the new position is occupied
+            var IsWalkable = ApiMapFunctionManager._map.PathingHandler.IsWalkable;
+
+			if (!IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
+            {
+                dir = newPosition - Position;
+                //We need to move tangentially to the thing that is blocking us
+                for(float angle = 1/18; angle < 1/2; angle += 1 / 18)
+                {
+                    newPosition = MathExtension.Rotated(dir, (float)(angle * Math.PI)) + Position;
+                    if (IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
+                    {
+                        break;
+					}
+					newPosition = MathExtension.Rotated(dir, -(float)(angle * Math.PI)) + Position;
+					if (IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
+					{
+						break;
+					}
+				}
+                if (!IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
+                {
+                    _logger.Debug("There is no path");
+                }
+    			maxDist = 0;
+            }
+
+            Position = newPosition;
+			return maxDist;
         }
 
         public bool PathTrueEndIs(Vector2 location)

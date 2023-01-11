@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using GameServerCore;
+using LeagueSandbox.GameServer.GameObjects;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
 
 namespace LeagueSandbox.GameServer.Handlers
@@ -78,12 +79,11 @@ namespace LeagueSandbox.GameServer.Handlers
                 return;
             }
 
-            var newPath = new List<Vector2>();
-            newPath.Add(obj.Position);
+            var newPath = new List<Vector2>() { obj.Position };
             
             foreach (Vector2 waypoint in path)
             {
-                if (IsWalkable(waypoint, obj.PathfindingRadius))
+                if (IsWalkable(waypoint, obj,  obj.PathfindingRadius))
                 {
                     newPath.Add(waypoint);
                 }
@@ -99,7 +99,7 @@ namespace LeagueSandbox.GameServer.Handlers
         /// <summary>
         /// Checks if the given position can be pathed on.
         /// </summary>
-        public bool IsWalkable(Vector2 pos, float radius = 0, bool checkObjects = false)
+        public bool IsWalkable(Vector2 pos, GameObject traveler, float radius = 0, bool checkObjects = false)
         {
             bool walkable = true;
             
@@ -108,7 +108,9 @@ namespace LeagueSandbox.GameServer.Handlers
                 walkable = false;
             }
 
-            if (checkObjects && _map.CollisionHandler.GetNearestObjects(new System.Activities.Presentation.View.Circle(pos, radius)).Count > 0)
+            var nearObjects = _map.CollisionHandler.GetNearestObjects(new System.Activities.Presentation.View.Circle(pos, radius));
+            nearObjects.Remove(traveler);
+			if (checkObjects && nearObjects.Count > 0)
             {
                 walkable = false;
             }
