@@ -961,27 +961,33 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
             // We check if the new position is occupied
             var IsWalkable = ApiMapFunctionManager._map.PathingHandler.IsWalkable;
 
-			if (!IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
+			if (!IsWalkable(newPosition, this, PathfindingRadius, !Status.HasFlag(StatusFlags.Ghosted)))
             {
+                _logger.Debug($"Avoiding Collision");
+                _logger.Debug($"{Position.X}; {Position.Y}; {PathfindingRadius}");
+                _logger.Debug($"{newPosition.X}; {newPosition.Y}");
                 dir = newPosition - Position;
                 //We need to move tangentially to the thing that is blocking us
-                for(float angle = 1/18; angle < 1/2; angle += 1 / 18)
+                for(double angle = 1.0/18; angle < 1.0/1.8; angle += 1.0/18)
                 {
                     newPosition = MathExtension.Rotated(dir, (float)(angle * Math.PI)) + Position;
-                    if (IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
+                    if (IsWalkable(newPosition, this, PathfindingRadius, !Status.HasFlag(StatusFlags.Ghosted)))
                     {
                         break;
 					}
+					_logger.Debug($"{newPosition.X}; {newPosition.Y}");
 					newPosition = MathExtension.Rotated(dir, -(float)(angle * Math.PI)) + Position;
-					if (IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
+					if (IsWalkable(newPosition, this, PathfindingRadius, !Status.HasFlag(StatusFlags.Ghosted)))
 					{
 						break;
 					}
+					_logger.Debug($"{newPosition.X}; {newPosition.Y}");
 				}
-                if (!IsWalkable(newPosition, this, CollisionRadius, Status.HasFlag(StatusFlags.Ghosted)))
-                {
-                    _logger.Debug("There is no path");
-                }
+                if (!IsWalkable(newPosition, this, PathfindingRadius, !Status.HasFlag(StatusFlags.Ghosted)))
+				{
+					_logger.Debug($"Path not found");
+					newPosition = Position;
+				}
     			maxDist = 0;
             }
 
