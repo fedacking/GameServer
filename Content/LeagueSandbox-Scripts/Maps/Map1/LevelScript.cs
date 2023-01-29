@@ -9,12 +9,15 @@ using LeagueSandbox.GameServer.GameObjects.StatsNS;
 using static LeagueSandbox.GameServer.API.ApiMapFunctionManager;
 using static LeagueSandbox.GameServer.API.ApiGameEvents;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.Buildings.AnimatedBuildings;
+using LeagueSandbox.GameServer.Logging;
+using log4net;
 
 namespace MapScripts.Map1
 {
     public class CLASSIC : IMapScript
-    {
-        public virtual MapScriptMetadata MapScriptMetadata { get; set; } = new MapScriptMetadata();
+	{
+		private static ILog _logger = LoggerProvider.GetLogger();
+		public virtual MapScriptMetadata MapScriptMetadata { get; set; } = new MapScriptMetadata();
 
         public bool HasFirstBloodHappened { get; set; } = false;
         public long NextSpawnTime { get; set; } = 90 * 1000;
@@ -294,11 +297,12 @@ namespace MapScripts.Map1
                 List<Vector2> waypoint = new List<Vector2>(MinionPaths[lane]);
 
                 if (barrackTeam == TeamId.TEAM_PURPLE)
-                {
-                    waypoint.Reverse();
+				{
+					waypoint.Reverse();
                 }
 
-                CreateLaneMinion(spawnWave.Item2, position, barrackTeam, _minionNumber, barrack.Value.Name, waypoint, LaneMinionAI);
+				_logger.Debug($"Spawning minion. Team {barrackTeam}, X {position.X}, Y {position.Y}, Lane {lane}");
+				CreateLaneMinion(spawnWave.Item2, position, barrackTeam, _minionNumber, barrack.Value.Name, waypoint, LaneMinionAI);
             }
 
             if (_minionNumber < 8)

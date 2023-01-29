@@ -963,9 +963,6 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
 
 			if (!IsWalkable(newPosition, this, PathfindingRadius, !Status.HasFlag(StatusFlags.Ghosted)))
             {
-                _logger.Debug($"Avoiding Collision");
-                _logger.Debug($"{Position.X}; {Position.Y}; {PathfindingRadius}");
-                _logger.Debug($"{newPosition.X}; {newPosition.Y}");
                 dir = newPosition - Position;
                 //We need to move tangentially to the thing that is blocking us
                 for(double angle = 1.0/18; angle < 1.0/1.8; angle += 1.0/18)
@@ -975,17 +972,14 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                     {
                         break;
 					}
-					_logger.Debug($"{newPosition.X}; {newPosition.Y}");
 					newPosition = MathExtension.Rotated(dir, -(float)(angle * Math.PI)) + Position;
 					if (IsWalkable(newPosition, this, PathfindingRadius, !Status.HasFlag(StatusFlags.Ghosted)))
 					{
 						break;
 					}
-					_logger.Debug($"{newPosition.X}; {newPosition.Y}");
 				}
                 if (!IsWalkable(newPosition, this, PathfindingRadius, !Status.HasFlag(StatusFlags.Ghosted)))
 				{
-					_logger.Debug($"Path not found");
 					newPosition = Position;
 				}
     			maxDist = 0;

@@ -82,13 +82,6 @@ objects.append(MapObject(path + spawns["blue"]["C"], 36, (255, 0, 0)))
 objects.append(MapObject(path + spawns["blue"]["L"], 36, (0, 255, 0)))
 objects.append(MapObject(path + spawns["blue"]["R"], 36, (0, 0, 255)))
 
-min_x = math.floor(find_mm(objects, lambda x: x.x - x.radius, min))
-min_y = math.floor(find_mm(objects, lambda x: x.y - x.radius, min))
-
-for obj in objects:
-    obj.x -= min_x
-    obj.y -= min_y
-
 max_x = math.ceil(find_mm(objects, lambda x: x.x + x.radius, max))
 max_y = math.ceil(find_mm(objects, lambda x: x.y + x.radius, max))
 
