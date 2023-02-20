@@ -38,46 +38,94 @@ namespace MapScripts.Map1
         };
 
         //List of every path minions will take, separated by team and lane
-        public Dictionary<Lane, List<Vector2>> MinionPaths { get; set; } = new Dictionary<Lane, List<Vector2>>
+        public Dictionary<TeamId, Dictionary<Lane, List<Vector2>>> MinionPaths { get; set; } = new Dictionary<TeamId, Dictionary<Lane, List<Vector2>>>
         {
-            //Pathing coordinates for Top lane
-            {Lane.LANE_L, new List<Vector2> {
-                new Vector2(917.0f, 1725.0f),
-                new Vector2(1170.0f, 4041.0f),
-                new Vector2(861.0f, 6459.0f),
-                new Vector2(880.0f, 10180.0f),
-                new Vector2(1268.0f, 11675.0f),
-                new Vector2(2806.0f, 13075.0f),
-                new Vector2(3907.0f, 13243.0f),
-                new Vector2(7550.0f, 13407.0f),
-                new Vector2(10244.0f, 13238.0f),
-                new Vector2(10947.0f, 13135.0f),
-                new Vector2(12511.0f, 12776.0f) }
-            },
+            { TeamId.TEAM_BLUE, new Dictionary<Lane, List<Vector2>>
+			    {
+                    //Pathing coordinates for Top lane
+                    {Lane.LANE_L, new List<Vector2> {
+					    new Vector2(917.0f, 1725.0f),
+					    new Vector2(1170.0f, 4041.0f),
+					    new Vector2(861.0f, 6459.0f),
+					    new Vector2(880.0f, 10180.0f),
+					    new Vector2(1268.0f, 11675.0f),
+					    new Vector2(2806.0f, 13075.0f),
+					    new Vector2(3907.0f, 13243.0f),
+					    new Vector2(7550.0f, 13407.0f),
+					    new Vector2(10244.0f, 13238.0f),
+					    new Vector2(10947.0f, 13135.0f),
+					    new Vector2(12511.0f, 12776.0f) }
+				    },
 
-            //Pathing coordinates for Mid lane
-            {Lane.LANE_C, new List<Vector2> {
-                new Vector2(1418.0f, 1686.0f),
-                new Vector2(2997.0f, 2781.0f),
-                new Vector2(4472.0f, 4727.0f),
-                new Vector2(8375.0f, 8366.0f),
-                new Vector2(10948.0f, 10821.0f),
-                new Vector2(12511.0f, 12776.0f) }
-            },
+                    //Pathing coordinates for Mid lane
+                    {Lane.LANE_C, new List<Vector2> {
+					    new Vector2(1418.0f, 1686.0f),
+					    new Vector2(2997.0f, 2781.0f),
+					    new Vector2(4472.0f, 4727.0f),
+					    new Vector2(8375.0f, 8366.0f),
+					    new Vector2(10948.0f, 10821.0f),
+					    new Vector2(12511.0f, 12776.0f) }
+				    },
 
-            //Pathing coordinates for Bot lane
-            {Lane.LANE_R, new List<Vector2> {
-                new Vector2(1487.0f, 1302.0f),
-                new Vector2(3789.0f, 1346.0f),
-                new Vector2(6430.0f, 1005.0f),
-                new Vector2(10995.0f, 1234.0f),
-                new Vector2(12841.0f, 3051.0f),
-                new Vector2(13148.0f, 4202.0f),
-                new Vector2(13249.0f, 7884.0f),
-                new Vector2(12886.0f, 10356.0f),
-                new Vector2(12511.0f, 12776.0f) }
-            }
-        };
+                    //Pathing coordinates for Bot lane
+                    {Lane.LANE_R, new List<Vector2> {
+					    new Vector2(1487.0f, 1302.0f),
+					    new Vector2(3789.0f, 1346.0f),
+					    new Vector2(6430.0f, 1005.0f),
+					    new Vector2(10995.0f, 1234.0f),
+					    new Vector2(12841.0f, 3051.0f),
+					    new Vector2(13148.0f, 4202.0f),
+					    new Vector2(13249.0f, 7884.0f),
+					    new Vector2(12886.0f, 10356.0f),
+					    new Vector2(12511.0f, 12776.0f) }
+				    }
+			    }
+            },
+			{ TeamId.TEAM_PURPLE, new Dictionary<Lane, List<Vector2>>
+				{
+                    //Pathing coordinates for Top lane
+                    {Lane.LANE_L, new List<Vector2> {
+						new Vector2(12428.0f, 13240.0f),
+						new Vector2(10947.0f, 13135.0f),
+						new Vector2(10244.0f, 13238.0f),
+						new Vector2(7550.0f, 13407.0f),
+						new Vector2(3907.0f, 13243.0f),
+						new Vector2(2806.0f, 13075.0f),
+						new Vector2(1268.0f, 11675.0f),
+						new Vector2(880.0f, 10180.0f),
+						new Vector2(861.0f, 6459.0f),
+						new Vector2(1170.0f, 4041.0f),
+						new Vector2(917.0f, 1725.0f)
+					}
+					},
+
+                    //Pathing coordinates for Mid lane
+                    {Lane.LANE_C, new List<Vector2> {
+						new Vector2(12511.0f, 12776.0f),
+						new Vector2(10948.0f, 10821.0f),
+						new Vector2(8375.0f, 8366.0f),
+						new Vector2(4472.0f, 4727.0f),
+						new Vector2(2997.0f, 2781.0f),
+						new Vector2(1418.0f, 1686.0f)
+                    }
+					},
+
+                    //Pathing coordinates for Bot lane
+                    {Lane.LANE_R, new List<Vector2> {
+						new Vector2(13068.0f, 12756.0f),
+						new Vector2(12886.0f, 10356.0f),
+						new Vector2(13249.0f, 7884.0f),
+						new Vector2(13148.0f, 4202.0f),
+						new Vector2(12841.0f, 3051.0f),
+						new Vector2(10995.0f, 1234.0f),
+						new Vector2(6430.0f, 1005.0f),
+						new Vector2(3789.0f, 1346.0f),
+						new Vector2(1487.0f, 1302.0f)
+					}
+					}
+				}
+			}
+		};
 
         //List of every wave type
         public Dictionary<string, List<MinionSpawnType>> MinionWaveTypes = new Dictionary<string, List<MinionSpawnType>>
@@ -291,12 +339,7 @@ namespace MapScripts.Map1
                 Tuple<int, List<MinionSpawnType>> spawnWave = MinionWaveToSpawn(GameTime(), _cannonMinionCount, isInhibitorDead, LevelScriptObjects.AllInhibitorsAreDead[opposed_team]);
                 cannonMinionCap = spawnWave.Item1;
 
-                List<Vector2> waypoint = new List<Vector2>(MinionPaths[lane]);
-
-                if (barrackTeam == TeamId.TEAM_PURPLE)
-                {
-                    waypoint.Reverse();
-                }
+                List<Vector2> waypoint = new List<Vector2>(MinionPaths[barrackTeam][lane]);
 
                 CreateLaneMinion(spawnWave.Item2, position, barrackTeam, _minionNumber, barrack.Value.Name, waypoint, LaneMinionAI);
             }
