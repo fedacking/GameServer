@@ -170,15 +170,27 @@ namespace LeagueSandbox.GameServer.Content.Navigation
                 MiddleOfMap = new Vector2(MapWidth / 2, MapHeight / 2);
             }
         }
+		public void DebugmodeLogNavgrid()
+		{
+			using (StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/navgrid.txt"))
+			{
+				sw.WriteLine($"{CellCountX}");
+				sw.WriteLine($"{CellCountY}");
+				foreach (NavigationGridCell cell in Cells)
+				{
+					sw.WriteLine($"{cell.ID};{cell.Flags};{cell.IsOpen};{IsWalkable(cell)}");
+				}
+			}
+		}
 
-        /// <summary>
-        /// Finds a path of waypoints, which are aligned by the cells of the navgrid (A* method), that lead to a set destination.
-        /// </summary>
-        /// <param name="from">Point that the path starts at.</param>
-        /// <param name="to">Point that the path ends at.</param>
-        /// <param name="distanceThreshold">Amount of distance away from terrain that the path should be.</param>
-        /// <returns>List of points forming a path in order: from -> to</returns>
-        public List<Vector2> GetPath(Vector2 from, Vector2 to, float distanceThreshold = 0)
+		/// <summary>
+		/// Finds a path of waypoints, which are aligned by the cells of the navgrid (A* method), that lead to a set destination.
+		/// </summary>
+		/// <param name="from">Point that the path starts at.</param>
+		/// <param name="to">Point that the path ends at.</param>
+		/// <param name="distanceThreshold">Amount of distance away from terrain that the path should be.</param>
+		/// <returns>List of points forming a path in order: from -> to</returns>
+		public List<Vector2> GetPath(Vector2 from, Vector2 to, float distanceThreshold = 0)
         {
             if(from == to)
             {
