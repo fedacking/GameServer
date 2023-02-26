@@ -2,13 +2,13 @@
 
 namespace GameServerCore.Packets.PacketDefinitions.Requests
 {
-    public class EmotionPacketRequest : ICoreRequest
-    {
-        public Emotions EmoteID;
+	public class EmotionPacketRequest : ICoreRequest
+	{
+		public Emotions EmoteID;
 
-        public EmotionPacketRequest(Emotions emoteId)
-        {
-            EmoteID = emoteId;
-        }
-    }
+		public EmotionPacketRequest(Emotions emoteId)
+		{
+			EmoteID = emoteId;
+		}
+	}
 }

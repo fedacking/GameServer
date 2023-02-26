@@ -9,21 +9,21 @@ using LeagueSandbox.GameServer.Scripting.CSharp;
 
 namespace Buffs
 {
-    internal class AscTrinketStartingCD : IBuffGameScript
-    {
-        public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
-        {
-            BuffType = BuffType.INTERNAL,
-            BuffAddType = BuffAddType.REPLACE_EXISTING
-        };
-        public StatsModifier StatsModifier { get; private set; }
+	internal class AscTrinketStartingCD : IBuffGameScript
+	{
+		public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
+		{
+			BuffType = BuffType.INTERNAL,
+			BuffAddType = BuffAddType.REPLACE_EXISTING
+		};
+		public StatsModifier StatsModifier { get; private set; }
 
-        public void OnDeactivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
-        {
-            if (unit is ObjAIBase obj && obj.Inventory != null)
-            {
-                obj.Spells[6 + (byte)SpellSlotType.InventorySlots].SetCooldown(45.0f, true);
-            }
-        }
-    }
+		public void OnDeactivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
+		{
+			if (unit is ObjAIBase obj && obj.Inventory != null)
+			{
+				obj.Spells[6 + (byte)SpellSlotType.InventorySlots].SetCooldown(45.0f, true);
+			}
+		}
+	}
 }

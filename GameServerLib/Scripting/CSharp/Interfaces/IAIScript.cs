@@ -4,19 +4,19 @@ using LeagueSandbox.GameServer.Scripting.CSharp;
 
 namespace GameServerCore.Scripting.CSharp
 {
-    public interface IAIScript
-    {
-        AIScriptMetaData AIScriptMetaData { get; set; }
-        void OnActivate(ObjAIBase owner)
-        {
-        }
+	public interface IAIScript
+	{
+		AIScriptMetaData AIScriptMetaData { get; set; }
+		void OnActivate(ObjAIBase owner)
+		{
+		}
 
-        void OnUpdate(float diff)
-        {
-        }
+		void OnUpdate(float diff)
+		{
+		}
 
-        void OnCallForHelp(AttackableUnit attacker, AttackableUnit victium)
-        {
-        }
-    }
+		void OnCallForHelp(AttackableUnit attacker, AttackableUnit victium)
+		{
+		}
+	}
 }

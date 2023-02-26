@@ -1,9 +1,8 @@
-﻿using System;
-namespace GameServerCore.Enums
+﻿namespace GameServerCore.Enums
 {
-    public enum RespawnPointCommand : byte
-    {
-        Unknown0 = 0,
-        Unknown1 = 1,
-    }
+	public enum RespawnPointCommand : byte
+	{
+		Unknown0 = 0,
+		Unknown1 = 1,
+	}
 }

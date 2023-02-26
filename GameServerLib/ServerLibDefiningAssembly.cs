@@ -2,8 +2,8 @@
 
 namespace LeagueSandbox.GameServer
 {
-    public static class ServerLibAssemblyDefiningType
-    {
-        public static Assembly Assembly => typeof(ServerLibAssemblyDefiningType).Assembly;
-    }
+	public static class ServerLibAssemblyDefiningType
+	{
+		public static Assembly Assembly => typeof(ServerLibAssemblyDefiningType).Assembly;
+	}
 }

@@ -1,9 +1,8 @@
-﻿using System;
-namespace GameServerCore.Enums
+﻿namespace GameServerCore.Enums
 {
-    public enum UIHighlightCommand
-    {
-        Destroy,
-        Activate
-    }
+	public enum UIHighlightCommand
+	{
+		Destroy,
+		Activate
+	}
 }

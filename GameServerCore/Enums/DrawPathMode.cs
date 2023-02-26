@@ -1,8 +1,8 @@
 ﻿namespace GameServerCore.Enums
 {
-    public enum DrawPathMode : byte
-    {
-        Disabled = 0,
-        Line = 1,
-    }
+	public enum DrawPathMode : byte
+	{
+		Disabled = 0,
+		Line = 1,
+	}
 }

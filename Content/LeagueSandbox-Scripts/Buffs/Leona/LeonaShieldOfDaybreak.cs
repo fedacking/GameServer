@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using GameServerCore.Enums;
+﻿using GameServerCore.Enums;
 using GameServerCore.Scripting.CSharp;
 using LeagueSandbox.GameServer.API;
 using LeagueSandbox.GameServer.GameObjects;
@@ -7,68 +6,69 @@ using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
 using LeagueSandbox.GameServer.GameObjects.SpellNS;
 using LeagueSandbox.GameServer.GameObjects.StatsNS;
-using static LeagueSandbox.GameServer.API.ApiFunctionManager;
 using LeagueSandbox.GameServer.Scripting.CSharp;
+using System.Numerics;
+using static LeagueSandbox.GameServer.API.ApiFunctionManager;
 
 namespace Buffs
 {
-    class LeonaShieldOfDaybreak : IBuffGameScript
-    {
-        public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
-        {
-            BuffType = BuffType.COMBAT_ENCHANCER,
-        };
+	class LeonaShieldOfDaybreak : IBuffGameScript
+	{
+		public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
+		{
+			BuffType = BuffType.COMBAT_ENCHANCER,
+		};
 
-        public StatsModifier StatsModifier { get; private set; } = new StatsModifier();
+		public StatsModifier StatsModifier { get; private set; } = new StatsModifier();
 
-        Particle pbuff;
-        Buff thisBuff;
+		Particle pbuff;
+		Buff thisBuff;
 
-        public void OnActivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
-        {
-            thisBuff = buff;
-            pbuff = AddParticleTarget(ownerSpell.CastInfo.Owner, unit, "Leona_ShieldOfDaybreak_cas", unit, buff.Duration, bone: "BUFFBONE_CSTM_SHIELD_TOP");
+		public void OnActivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
+		{
+			thisBuff = buff;
+			pbuff = AddParticleTarget(ownerSpell.CastInfo.Owner, unit, "Leona_ShieldOfDaybreak_cas", unit, buff.Duration, bone: "BUFFBONE_CSTM_SHIELD_TOP");
 
-            StatsModifier.Range.FlatBonus = 30.0f;
+			StatsModifier.Range.FlatBonus = 30.0f;
 
-            unit.AddStatModifier(StatsModifier);
+			unit.AddStatModifier(StatsModifier);
 
-            if (unit is ObjAIBase ai)
-            {
-                SealSpellSlot(ai, SpellSlotType.SpellSlots, 0, SpellbookType.SPELLBOOK_CHAMPION, true);
-                ai.CancelAutoAttack(true);
+			if (unit is ObjAIBase ai)
+			{
+				SealSpellSlot(ai, SpellSlotType.SpellSlots, 0, SpellbookType.SPELLBOOK_CHAMPION, true);
+				ai.CancelAutoAttack(true);
 
-                ApiEventManager.OnPreAttack.AddListener(this, ai, OnPreAttack, true);
-            }
-        }
+				ApiEventManager.OnPreAttack.AddListener(this, ai, OnPreAttack, true);
+			}
+		}
 
-        public void OnDeactivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
-        {
-            if (buff.TimeElapsed >= buff.Duration)
-            {
-                ApiEventManager.OnPreAttack.RemoveListener(this, unit as ObjAIBase);
-            }
+		public void OnDeactivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
+		{
+			if (buff.TimeElapsed >= buff.Duration)
+			{
+				ApiEventManager.OnPreAttack.RemoveListener(this, unit as ObjAIBase);
+			}
 
-            // TODO: Spell Cooldown
+			// TODO: Spell Cooldown
 
-            if (unit is ObjAIBase ai)
-            {
-                SealSpellSlot(ai, SpellSlotType.SpellSlots, 0, SpellbookType.SPELLBOOK_CHAMPION, false);
-            }
+			if (unit is ObjAIBase ai)
+			{
+				SealSpellSlot(ai, SpellSlotType.SpellSlots, 0, SpellbookType.SPELLBOOK_CHAMPION, false);
+			}
 
-            RemoveParticle(pbuff);
-        }
+			RemoveParticle(pbuff);
+		}
 
-        public void OnPreAttack(Spell spell)
-        {
-            spell.CastInfo.Owner.SkipNextAutoAttack();
+		public void OnPreAttack(Spell spell)
+		{
+			spell.CastInfo.Owner.SkipNextAutoAttack();
 
-            SpellCast(spell.CastInfo.Owner, 0, SpellSlotType.ExtraSlots, false, spell.CastInfo.Owner.TargetUnit, Vector2.Zero);
+			SpellCast(spell.CastInfo.Owner, 0, SpellSlotType.ExtraSlots, false, spell.CastInfo.Owner.TargetUnit, Vector2.Zero);
 
-            if (thisBuff != null)
-            {
-                thisBuff.DeactivateBuff();
-            }
-        }
-    }
+			if (thisBuff != null)
+			{
+				thisBuff.DeactivateBuff();
+			}
+		}
+	}
 }

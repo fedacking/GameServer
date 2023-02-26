@@ -2,10 +2,10 @@
 
 namespace GameServerCore.Scripting.CSharp
 {
-    public interface ITalentScript
-    {
-        void OnActivate(ObjAIBase owner, byte rank)
-        {
-        }
-    }
+	public interface ITalentScript
+	{
+		void OnActivate(ObjAIBase owner, byte rank)
+		{
+		}
+	}
 }

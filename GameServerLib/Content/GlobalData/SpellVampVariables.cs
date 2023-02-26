@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace LeagueSandbox.GameServer.Content
 {
-    public class SpellVampVariables
-    {
-        public Dictionary<DamageSource, float> SpellVampRatios = new Dictionary<DamageSource, float>
-        {
+	public class SpellVampVariables
+	{
+		public Dictionary<DamageSource, float> SpellVampRatios = new Dictionary<DamageSource, float>
+		{
             // Spell Vamp ratio for DAMAGESOURCE_SPELL
             {DamageSource.DAMAGE_SOURCE_SPELL, 1.0f },
 
@@ -30,6 +30,6 @@ namespace LeagueSandbox.GameServer.Content
 
             // Spell Vamp ratio for DAMAGESOURCE_PET
             {DamageSource.DAMAGE_SOURCE_PET, 0.0f },
-        };
-    }
+		};
+	}
 }

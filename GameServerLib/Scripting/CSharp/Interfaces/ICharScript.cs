@@ -3,18 +3,18 @@ using LeagueSandbox.GameServer.GameObjects.SpellNS;
 
 namespace GameServerCore.Scripting.CSharp
 {
-    public interface ICharScript
-    {
-        void OnActivate(ObjAIBase owner, Spell spell = null)
-        {
-        }
+	public interface ICharScript
+	{
+		void OnActivate(ObjAIBase owner, Spell spell = null)
+		{
+		}
 
-        void OnDeactivate(ObjAIBase owner, Spell spell = null)
-        {
-        }
+		void OnDeactivate(ObjAIBase owner, Spell spell = null)
+		{
+		}
 
-        void OnUpdate(float diff)
-        {
-        }
-    }
+		void OnUpdate(float diff)
+		{
+		}
+	}
 }

@@ -1,6 +1,6 @@
 ﻿namespace GameServerCore.Packets.PacketDefinitions.Requests
 {
-    public class QueryStatusRequest : ICoreRequest
-    {
-    }
+	public class QueryStatusRequest : ICoreRequest
+	{
+	}
 }

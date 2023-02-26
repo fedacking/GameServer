@@ -1,23 +1,23 @@
-﻿using static LeagueSandbox.GameServer.API.ApiFunctionManager;
+﻿using GameServerCore.Scripting.CSharp;
+using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
+using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
+using LeagueSandbox.GameServer.GameObjects.SpellNS;
 using LeagueSandbox.GameServer.Scripting.CSharp;
 using System.Numerics;
-using GameServerCore.Scripting.CSharp;
-using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
-using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
-using LeagueSandbox.GameServer.GameObjects.SpellNS;
+using static LeagueSandbox.GameServer.API.ApiFunctionManager;
 
 namespace ItemSpells
 {
-    public class RegenerationPotion : ISpellScript
-    {
-        public SpellScriptMetadata ScriptMetadata => new SpellScriptMetadata()
-        {
-            // TODO
-        };
+	public class RegenerationPotion : ISpellScript
+	{
+		public SpellScriptMetadata ScriptMetadata => new SpellScriptMetadata()
+		{
+			// TODO
+		};
 
-        public void OnSpellPreCast(ObjAIBase owner, Spell spell, AttackableUnit target, Vector2 start, Vector2 end)
-        {
-            AddBuff("RegenerationPotion", 15.0f, 1, spell, owner, owner);
-        }
-    }
+		public void OnSpellPreCast(ObjAIBase owner, Spell spell, AttackableUnit target, Vector2 start, Vector2 end)
+		{
+			AddBuff("RegenerationPotion", 15.0f, 1, spell, owner, owner);
+		}
+	}
 }

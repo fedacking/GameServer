@@ -5,13 +5,13 @@ using LeagueSandbox.GameServer.Scripting.CSharp;
 
 namespace Buffs
 {
-    internal class InfernalGuardianTimer : IBuffGameScript
-    {
-        public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
-        {
-            BuffType = BuffType.COMBAT_ENCHANCER
-        };
+	internal class InfernalGuardianTimer : IBuffGameScript
+	{
+		public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
+		{
+			BuffType = BuffType.COMBAT_ENCHANCER
+		};
 
-        public StatsModifier StatsModifier { get; private set; }
-    }
+		public StatsModifier StatsModifier { get; private set; }
+	}
 }

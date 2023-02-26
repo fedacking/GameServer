@@ -8,20 +8,20 @@ using LeagueSandbox.GameServer.Scripting.CSharp;
 
 namespace Buffs
 {
-    internal class HowlingAbyssAura : IBuffGameScript
-    {
-        public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
-        {
-            BuffType = BuffType.COMBAT_ENCHANCER,
-            BuffAddType = BuffAddType.REPLACE_EXISTING
-        };
+	internal class HowlingAbyssAura : IBuffGameScript
+	{
+		public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
+		{
+			BuffType = BuffType.COMBAT_ENCHANCER,
+			BuffAddType = BuffAddType.REPLACE_EXISTING
+		};
 
-        public StatsModifier StatsModifier { get; private set; } = new StatsModifier();
+		public StatsModifier StatsModifier { get; private set; } = new StatsModifier();
 
-        public void OnActivate(AttackableUnit unit, Buff buff, Spell ownerSpell = null)
-        {
-            //TODO: Reduce outgoing heal by 50%, 0.15% max mana as Mana regen
-        }
-    }
+		public void OnActivate(AttackableUnit unit, Buff buff, Spell ownerSpell = null)
+		{
+			//TODO: Reduce outgoing heal by 50%, 0.15% max mana as Mana regen
+		}
+	}
 }
 

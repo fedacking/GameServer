@@ -1,6 +1,6 @@
 ﻿namespace GameServerCore.Packets.PacketDefinitions.Requests
 {
-    public class ScoreboardRequest : ICoreRequest
-    {
-    }
+	public class ScoreboardRequest : ICoreRequest
+	{
+	}
 }

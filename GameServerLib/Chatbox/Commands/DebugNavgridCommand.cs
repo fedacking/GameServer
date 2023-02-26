@@ -1,13 +1,5 @@
 ﻿using LeagueSandbox.GameServer;
 using LeagueSandbox.GameServer.Chatbox;
-using LeagueSandbox.GameServer.Content.Navigation;
-using LeagueSandbox.GameServer.Players;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace GameServerLib.Chatbox.Commands
 {

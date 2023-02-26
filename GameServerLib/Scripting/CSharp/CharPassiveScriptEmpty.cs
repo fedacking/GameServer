@@ -2,7 +2,7 @@
 
 namespace LeagueSandbox.GameServer.Scripting.CSharp
 {
-    public class CharScriptEmpty : ICharScript
-    {
-    }
+	public class CharScriptEmpty : ICharScript
+	{
+	}
 }

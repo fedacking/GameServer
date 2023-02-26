@@ -1,18 +1,17 @@
-﻿using GameServerCore;
-namespace LeagueSandbox.GameServer.Packets
+﻿namespace LeagueSandbox.GameServer.Packets
 {
-    public class NetworkIdManager
-    {
-        protected uint _dwStart = 0x40000000; //new netid
-        protected object _lock = new object();
+	public class NetworkIdManager
+	{
+		protected uint _dwStart = 0x40000000; //new netid
+		protected object _lock = new object();
 
-        public uint GetNewNetId()
-        {
-            lock (_lock)
-            {
-                _dwStart++;
-                return _dwStart;
-            }
-        }
-    }
+		public uint GetNewNetId()
+		{
+			lock (_lock)
+			{
+				_dwStart++;
+				return _dwStart;
+			}
+		}
+	}
 }

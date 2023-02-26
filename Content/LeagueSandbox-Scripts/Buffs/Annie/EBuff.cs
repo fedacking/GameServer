@@ -1,56 +1,56 @@
 using GameServerCore.Enums;
-using LeagueSandbox.GameServer.GameObjects.StatsNS;
-using LeagueSandbox.GameServer.API;
-using static LeagueSandbox.GameServer.API.ApiFunctionManager;
 using GameServerCore.Scripting.CSharp;
-using LeagueSandbox.GameServer.Scripting.CSharp;
-using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
+using LeagueSandbox.GameServer.API;
 using LeagueSandbox.GameServer.GameObjects;
-using LeagueSandbox.GameServer.GameObjects.SpellNS;
+using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
+using LeagueSandbox.GameServer.GameObjects.SpellNS;
+using LeagueSandbox.GameServer.GameObjects.StatsNS;
+using LeagueSandbox.GameServer.Scripting.CSharp;
+using static LeagueSandbox.GameServer.API.ApiFunctionManager;
 
 namespace Buffs
 {
-    internal class MoltenShield : IBuffGameScript
-    {
-        public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
-        {
-            BuffType = BuffType.COMBAT_ENCHANCER
-        };
+	internal class MoltenShield : IBuffGameScript
+	{
+		public BuffScriptMetaData BuffMetaData { get; set; } = new BuffScriptMetaData
+		{
+			BuffType = BuffType.COMBAT_ENCHANCER
+		};
 
-        public StatsModifier StatsModifier { get; private set; } = new StatsModifier();
+		public StatsModifier StatsModifier { get; private set; } = new StatsModifier();
 
-        public void OnActivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
-        {
-            float bonus = 10f + (10f * ownerSpell.CastInfo.Owner.Stats.Level);
-            
-            StatsModifier.Armor.FlatBonus += bonus;
-            StatsModifier.MagicResist.FlatBonus += bonus;
-            unit.AddStatModifier(StatsModifier);
+		public void OnActivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
+		{
+			float bonus = 10f + (10f * ownerSpell.CastInfo.Owner.Stats.Level);
 
-            // TODO: Use OnPreDamage instead.
-            ApiEventManager.OnBeingHit.AddListener(this, unit, OnBeingHit, false);
-        }
+			StatsModifier.Armor.FlatBonus += bonus;
+			StatsModifier.MagicResist.FlatBonus += bonus;
+			unit.AddStatModifier(StatsModifier);
 
-        public void OnBeingHit(AttackableUnit owner, AttackableUnit attacker)
-        {
-            if (!(attacker is BaseTurret) && owner is ObjAIBase obj)
-            {
-                float ap = obj.Stats.AbilityPower.Total * 0.2f;
-                float damage = ap + 10f + (obj.Spells[2].CastInfo.SpellLevel * 10f);
+			// TODO: Use OnPreDamage instead.
+			ApiEventManager.OnBeingHit.AddListener(this, unit, OnBeingHit, false);
+		}
 
-                attacker.TakeDamage(obj, damage, DamageType.DAMAGE_TYPE_MAGICAL, DamageSource.DAMAGE_SOURCE_ATTACK, false);
-                AddParticleTarget(obj, null, "global_armor_pos_buf", attacker);
-            }
-        }
+		public void OnBeingHit(AttackableUnit owner, AttackableUnit attacker)
+		{
+			if (!(attacker is BaseTurret) && owner is ObjAIBase obj)
+			{
+				float ap = obj.Stats.AbilityPower.Total * 0.2f;
+				float damage = ap + 10f + (obj.Spells[2].CastInfo.SpellLevel * 10f);
 
-        public void OnDeactivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
-        {
-            ApiEventManager.OnBeingHit.RemoveListener(this);
-        }
+				attacker.TakeDamage(obj, damage, DamageType.DAMAGE_TYPE_MAGICAL, DamageSource.DAMAGE_SOURCE_ATTACK, false);
+				AddParticleTarget(obj, null, "global_armor_pos_buf", attacker);
+			}
+		}
 
-        public void OnUpdate(float diff)
-        {
-        }
-    }
+		public void OnDeactivate(AttackableUnit unit, Buff buff, Spell ownerSpell)
+		{
+			ApiEventManager.OnBeingHit.RemoveListener(this);
+		}
+
+		public void OnUpdate(float diff)
+		{
+		}
+	}
 }

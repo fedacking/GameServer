@@ -2,23 +2,23 @@
 
 namespace LeagueSandbox.GameServer.Chatbox.Commands
 {
-    public class ClearSlowCommand : ChatCommandBase
-    {
-        private readonly PlayerManager _playerManager;
+	public class ClearSlowCommand : ChatCommandBase
+	{
+		private readonly PlayerManager _playerManager;
 
-        public override string Command => "clearslows";
-        public override string Syntax => $"{Command}";
+		public override string Command => "clearslows";
+		public override string Syntax => $"{Command}";
 
-        public ClearSlowCommand(ChatCommandManager chatCommandManager, Game game)
-            : base(chatCommandManager, game)
-        {
-            _playerManager = game.PlayerManager;
-        }
+		public ClearSlowCommand(ChatCommandManager chatCommandManager, Game game)
+			: base(chatCommandManager, game)
+		{
+			_playerManager = game.PlayerManager;
+		}
 
-        public override void Execute(int userId, bool hasReceivedArguments, string arguments = "")
-        {
-            _playerManager.GetPeerInfo(userId).Champion.Stats.ClearSlows();
-            ChatCommandManager.SendDebugMsgFormatted(DebugMsgType.INFO, "Your slows have been cleared!");
-        }
-    }
+		public override void Execute(int userId, bool hasReceivedArguments, string arguments = "")
+		{
+			_playerManager.GetPeerInfo(userId).Champion.Stats.ClearSlows();
+			ChatCommandManager.SendDebugMsgFormatted(DebugMsgType.INFO, "Your slows have been cleared!");
+		}
+	}
 }
