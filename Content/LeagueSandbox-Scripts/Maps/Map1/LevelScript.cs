@@ -344,7 +344,6 @@ namespace MapScripts.Map1
 
                 List<Vector2> waypoint = new List<Vector2>(MinionPaths[barrackTeam][lane]);
 
-				_logger.Debug($"Spawning minion. Team {barrackTeam}, X {position.X}, Y {position.Y}, Lane {lane}");
 				CreateLaneMinion(spawnWave.Item2, position, barrackTeam, _minionNumber, barrack.Value.Name, waypoint, LaneMinionAI);
             }
 

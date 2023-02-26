@@ -301,7 +301,7 @@ namespace MapScripts.Map1
                 nexusStats.HealthPoints.BaseValue = 5500.0f;
                 nexusStats.CurrentHealth = nexusStats.HealthPoints.BaseValue;
 
-                var nexus = CreateNexus(nexusObj.Name, NexusModels[teamId], position, teamId, 353, 1700, nexusStats);
+                var nexus = CreateNexus(nexusObj.Name, NexusModels[teamId], position, teamId, 340, 1700, nexusStats);
 
                 ApiEventManager.OnDeath.AddListener(nexus, nexus, OnNexusDeath, true);
                 NexusList.Add(nexus);

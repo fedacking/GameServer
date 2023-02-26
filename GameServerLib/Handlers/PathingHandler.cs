@@ -4,15 +4,18 @@ using System.Numerics;
 using GameServerCore;
 using LeagueSandbox.GameServer.GameObjects;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
+using LeagueSandbox.GameServer.Logging;
+using log4net;
 
 namespace LeagueSandbox.GameServer.Handlers
 {
-    /// <summary>
-    /// Class which calls path based functions for GameObjects.
-    /// </summary>
-    public class PathingHandler
-    {
-        private MapScriptHandler _map;
+	/// <summary>
+	/// Class which calls path based functions for GameObjects.
+	/// </summary>
+	public class PathingHandler
+	{
+		private static ILog _logger = LoggerProvider.GetLogger();
+		private MapScriptHandler _map;
         private readonly List<AttackableUnit> _pathfinders = new List<AttackableUnit>();
         private float pathUpdateTimer;
 
@@ -112,6 +115,10 @@ namespace LeagueSandbox.GameServer.Handlers
             nearObjects.Remove(traveler);
 			if (checkObjects && nearObjects.Count > 0)
             {
+                foreach (GameObject obj in nearObjects)
+                {
+                    _logger.Debug($";Crashing against:{obj};{obj.Position.X};{obj.Position.Y}");
+                }
                 walkable = false;
             }
 
