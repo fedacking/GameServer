@@ -176,6 +176,8 @@ namespace LeagueSandbox.GameServer.Content.Navigation
 			{
 				sw.WriteLine($"{CellCountX}");
 				sw.WriteLine($"{CellCountY}");
+				sw.WriteLine($"{CellSize}");
+				sw.WriteLine($"{MinGridPosition}");
 				foreach (NavigationGridCell cell in Cells)
 				{
 					sw.WriteLine($"{cell.ID};{cell.Flags};{cell.IsOpen};{IsWalkable(cell)}");
@@ -508,7 +510,8 @@ namespace LeagueSandbox.GameServer.Content.Navigation
 		{
 			return cell != null
 				&& !cell.HasFlag(NavigationGridCellFlags.NOT_PASSABLE)
-				&& !cell.HasFlag(NavigationGridCellFlags.SEE_THROUGH);
+				&& !cell.HasFlag(NavigationGridCellFlags.SEE_THROUGH)
+				&& !cell.HasFlag(NavigationGridCellFlags.TURRET);
 		}
 
 		bool IsWalkable(NavigationGridCell cell, float checkRadius)
@@ -927,6 +930,14 @@ namespace LeagueSandbox.GameServer.Content.Navigation
 				}
 			}
 			return closestCell;
+		}
+
+		internal void MarkCellsTurret(List<Vector2> turretCells)
+		{
+			foreach(var cellVector in turretCells)
+			{
+				GetCell(cellVector, false).SetFlags(NavigationGridCellFlags.TURRET);
+			}
 		}
 	}
 }

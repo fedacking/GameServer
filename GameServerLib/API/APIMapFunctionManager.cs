@@ -12,6 +12,7 @@ using LeagueSandbox.GameServer.GameObjects.StatsNS;
 using LeagueSandbox.GameServer.Handlers;
 using LeagueSandbox.GameServer.Logging;
 using log4net;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -440,6 +441,11 @@ namespace LeagueSandbox.GameServer.API
 		public static void NotifyMapPing(Vector2 position, PingCategory ping)
 		{
 			_game.PacketNotifier.NotifyS2C_MapPing(position, (Pings)ping);
+		}
+
+		public static void AddTurretCells(List<Vector2> turretCells)
+		{
+			_game.Map.NavigationGrid.MarkCellsTurret(turretCells);
 		}
 	}
 }

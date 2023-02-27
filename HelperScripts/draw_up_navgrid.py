@@ -9,6 +9,7 @@ boolean = {
 with open("input/navgrid.txt", "r+") as file:
     x_count = int(file.readline())
     y_count = int(file.readline())
+    cell_size = int(file.readline())
     cells = []
 
     for x in range(0, y_count):
