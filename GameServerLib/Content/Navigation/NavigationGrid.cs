@@ -939,5 +939,13 @@ namespace LeagueSandbox.GameServer.Content.Navigation
 				GetCell(cellVector, false).SetFlags(NavigationGridCellFlags.TURRET);
 			}
 		}
+
+		internal void MarkTurret(Vector2 position, float radius)
+		{
+			foreach (var cell in GetAllCellsInRange(position, radius))
+			{
+				cell.SetFlags(NavigationGridCellFlags.TURRET);
+			}
+		}
 	}
 }

@@ -447,5 +447,10 @@ namespace LeagueSandbox.GameServer.API
 		{
 			_game.Map.NavigationGrid.MarkCellsTurret(turretCells);
 		}
+
+		public static void AddTurret(LaneTurret turret)
+		{
+			_game.Map.NavigationGrid.MarkTurret(turret.Position, turret.PathfindingRadius);
+		}
 	}
 }
