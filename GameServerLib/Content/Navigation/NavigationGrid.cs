@@ -327,14 +327,14 @@ namespace LeagueSandbox.GameServer.Content.Navigation
             }
         }
 
-        bool IsWalkable(NavigationGridCell cell)
+        public bool IsWalkable(NavigationGridCell cell)
         {
             return cell != null
                 && !cell.HasFlag(NavigationGridCellFlags.NOT_PASSABLE)
                 && !cell.HasFlag(NavigationGridCellFlags.SEE_THROUGH);
         }
 
-        bool IsWalkable(NavigationGridCell cell, float checkRadius)
+		public bool IsWalkable(NavigationGridCell cell, float checkRadius)
         {
             Vector2 cellCenter = cell.GetCenter();
             return IsWalkable(cellCenter, checkRadius, false);

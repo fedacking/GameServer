@@ -11,6 +11,8 @@ using System.Linq;
 using LeagueSandbox.GameServer.Handlers;
 using LeagueSandbox.GameServer.Logging;
 using log4net;
+using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
+using System.IO;
 
 namespace LeagueSandbox.GameServer.Handlers
 {
@@ -21,12 +23,14 @@ namespace LeagueSandbox.GameServer.Handlers
 	{
 		private static ILog _logger = LoggerProvider.GetLogger();
 		private MapScriptHandler _map;
+		private NavigationGrid navGrid;
 		private readonly List<AttackableUnit> _pathfinders = new List<AttackableUnit>();
 		private float pathUpdateTimer;
 
 		public PathingHandler(MapScriptHandler map)
 		{
 			_map = map;
+			navGrid = _map.NavigationGrid;
 		}
 
 		/// <summary>
@@ -92,7 +96,7 @@ namespace LeagueSandbox.GameServer.Handlers
 
 			foreach (Vector2 waypoint in path)
 			{
-				if (IsWalkable(waypoint, obj.PathfindingRadius))
+				if (IsPathable(waypoint, obj.PathfindingRadius))
 				{
 					newPath.Add(waypoint);
 				}
@@ -106,23 +110,40 @@ namespace LeagueSandbox.GameServer.Handlers
 		}
 
 		/// <summary>
+		/// Checks if the given position can be walked on.
+		/// </summary>
+		public bool IsWalkable(Vector2 pos, float radius = 0)
+		{
+			bool pathable = navGrid.IsWalkable(pos, radius);
+
+			
+
+			return pathable;
+		}
+
+		/// <summary>
 		/// Checks if the given position can be pathed on.
 		/// </summary>
-		public bool IsWalkable(Vector2 pos, float radius = 0, bool checkObjects = false)
+		public bool IsPathable(Vector2 pos, float radius = 0, bool checkObjects = false)
 		{
-			bool walkable = true;
+			bool pathable = navGrid.IsWalkable(pos, radius);
 
-			if (!_map.NavigationGrid.IsWalkable(pos, radius))
+			if (pathable && 
+				checkObjects && 
+				_map.CollisionHandler.GetNearestObjects(new System.Activities.Presentation.View.Circle(pos, radius)).Count > 0)
 			{
-				walkable = false;
+				pathable = false;
 			}
 
-			if (checkObjects && _map.CollisionHandler.GetNearestObjects(new System.Activities.Presentation.View.Circle(pos, radius)).Count > 0)
-			{
-				walkable = false;
-			}
+			return pathable;
+		}
 
-			return walkable;
+		/// <summary>
+		/// Checks if the given position can be moved into.
+		/// </summary>
+		public bool IsOpen(Vector2 pos, float radius = 0, bool checkObjects = false)
+		{
+			return IsPathable(pos, radius, checkObjects);
 		}
 
 		/// <summary>
@@ -139,7 +160,7 @@ namespace LeagueSandbox.GameServer.Handlers
 			// y = r * sin(angle)
 			// r = distance from center
 			// Draws spirals until it finds a walkable spot
-			for (int r = 1; !IsWalkable(location, distanceThreshold); r++)
+			for (int r = 1; !IsPathable(location, distanceThreshold); r++)
 			{
 				location.X += r * (float)Math.Cos(angle);
 				location.Y += r * (float)Math.Sin(angle);
@@ -153,17 +174,17 @@ namespace LeagueSandbox.GameServer.Handlers
 		{
 			if (translate)
 			{
-				orig = _map.NavigationGrid.TranslateToNavGrid(orig);
-				dest = _map.NavigationGrid.TranslateToNavGrid(dest);
+				orig = navGrid.TranslateToNavGrid(orig);
+				dest = navGrid.TranslateToNavGrid(dest);
 			}
 
-			float tradius = radius / _map.NavigationGrid.CellSize;
+			float tradius = radius / navGrid.CellSize;
 			Vector2 p = (dest - orig).Normalized().Perpendicular() * tradius;
 
-			var cells = _map.NavigationGrid.GetAllCellsInRange(orig, radius, false)
-			.Concat(_map.NavigationGrid.GetAllCellsInRange(dest, radius, false))
-			.Concat(_map.NavigationGrid.GetAllCellsInLine(orig + p, dest + p))
-			.Concat(_map.NavigationGrid.GetAllCellsInLine(orig - p, dest - p));
+			var cells = navGrid.GetAllCellsInRange(orig, radius, false)
+			.Concat(navGrid.GetAllCellsInRange(dest, radius, false))
+			.Concat(navGrid.GetAllCellsInLine(orig + p, dest + p))
+			.Concat(navGrid.GetAllCellsInLine(orig - p, dest - p));
 
 			int minY = (int)(Math.Min(orig.Y, dest.Y) - tradius) - 1;
 			int maxY = (int)(Math.Max(orig.Y, dest.Y) + tradius) + 1;
@@ -172,7 +193,7 @@ namespace LeagueSandbox.GameServer.Handlers
 			var xRanges = new short[countY, 3];
 			foreach (var cell in cells)
 			{
-				if (!IsWalkable(cell.GetCenter()))
+				if (!IsPathable(cell.GetCenter()))
 				{
 					return true;
 				}
@@ -194,7 +215,7 @@ namespace LeagueSandbox.GameServer.Handlers
 			{
 				for (int x = xRanges[y, 0] + 1; x < xRanges[y, 1]; x++)
 				{
-					if (!IsWalkable(new Vector2((short)x, (short)(minY + y))))
+					if (!IsPathable(new Vector2((short)x, (short)(minY + y))))
 					{
 						return true;
 					}
@@ -259,12 +280,12 @@ namespace LeagueSandbox.GameServer.Handlers
 			}
 
 
-			var fromNav = _map.NavigationGrid.TranslateToNavGrid(from);
-			var cellFrom = _map.NavigationGrid.GetCell(fromNav, false);
+			var fromNav = navGrid.TranslateToNavGrid(from);
+			var cellFrom = navGrid.GetCell(fromNav, false);
 			//var goal = GetClosestWalkableCell(to, distanceThreshold, true);
 			to = GetClosestTerrainExit(to, distanceThreshold);
-			var toNav = _map.NavigationGrid.TranslateToNavGrid(to);
-			var cellTo = _map.NavigationGrid.GetCell(toNav, false);
+			var toNav = navGrid.TranslateToNavGrid(to);
+			var cellTo = navGrid.GetCell(toNav, false);
 
 			if (cellFrom == null || cellTo == null)
 			{
@@ -310,7 +331,7 @@ namespace LeagueSandbox.GameServer.Handlers
 					break;
 				}
 
-				foreach (NavigationGridCell neighborCell in _map.NavigationGrid.GetCellNeighbors(cell))
+				foreach (NavigationGridCell neighborCell in navGrid.GetCellNeighbors(cell))
 				{
 					// if the neighbor is in the closed list - skip
 					if (closedList.Contains(neighborCell.ID))
@@ -379,12 +400,26 @@ namespace LeagueSandbox.GameServer.Handlers
 			for (int i = 1; i < path.Count - 1; i++)
 			{
 				var navGridCell = path[i];
-				returnList.Add(_map.NavigationGrid.TranslateFromNavGrid(navGridCell.Locator));
+				returnList.Add(navGrid.TranslateFromNavGrid(navGridCell.Locator));
 			}
 			returnList.Add(to);
 
 			//_logger.Debug("Good path found");
 			return returnList;
+		}
+
+		internal void LogPathfinding(Champion champion)
+		{
+			using (StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/navgrid.txt"))
+			{
+				sw.WriteLine($"{navGrid.CellCountX}");
+				sw.WriteLine($"{navGrid.CellCountY}");
+				sw.WriteLine($"{navGrid.CellSize}");
+				foreach (NavigationGridCell cell in navGrid.Cells)
+				{
+					sw.WriteLine($"{cell.ID};{cell.Flags};{cell.IsOpen};{navGrid.IsWalkable(cell)}");
+				}
+			}
 		}
 	}
 }

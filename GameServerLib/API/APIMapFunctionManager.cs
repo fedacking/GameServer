@@ -13,6 +13,7 @@ using LeagueSandbox.GameServer.GameObjects.StatsNS;
 using LeagueSandbox.GameServer.Handlers;
 using LeagueSandbox.GameServer.Logging;
 using log4net;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -442,5 +443,10 @@ namespace LeagueSandbox.GameServer.API
         {
             _game.PacketNotifier.NotifyS2C_MapPing(position, (Pings)ping);
         }
-    }
+
+		internal static void LogPathfinding(Champion champion)
+		{
+            _game.Map.PathingHandler.LogPathfinding(champion);
+		}
+	}
 }
