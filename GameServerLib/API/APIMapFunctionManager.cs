@@ -448,5 +448,10 @@ namespace LeagueSandbox.GameServer.API
 		{
             _game.Map.PathingHandler.LogPathfinding(champion);
 		}
+
+		public static void AddTurret(LaneTurret turret)
+		{
+			_game.Map.PathingHandler.turretPathing.InsertTurret(turret);
+		}
 	}
 }

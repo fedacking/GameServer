@@ -13,6 +13,7 @@ using LeagueSandbox.GameServer.Logging;
 using log4net;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
 using System.IO;
+using GameServerLib.Handlers;
 
 namespace LeagueSandbox.GameServer.Handlers
 {
@@ -24,53 +25,13 @@ namespace LeagueSandbox.GameServer.Handlers
 		private static ILog _logger = LoggerProvider.GetLogger();
 		private MapScriptHandler _map;
 		private NavigationGrid navGrid;
-		private readonly List<AttackableUnit> _pathfinders = new List<AttackableUnit>();
-		private float pathUpdateTimer;
+		public TurretPathingHandler turretPathing;
 
 		public PathingHandler(MapScriptHandler map)
 		{
 			_map = map;
 			navGrid = _map.NavigationGrid;
-		}
-
-		/// <summary>
-		/// Adds the specified GameObject to the list of GameObjects to check for pathfinding. *NOTE*: Will fail to fully add the GameObject if it is out of the map's bounds.
-		/// </summary>
-		/// <param name="obj">GameObject to add.</param>
-		public void AddPathfinder(AttackableUnit obj)
-		{
-			_pathfinders.Add(obj);
-		}
-
-		/// <summary>
-		/// GameObject to remove from the list of GameObjects to check for pathfinding.
-		/// </summary>
-		/// <param name="obj">GameObject to remove.</param>
-		/// <returns>true if item is successfully removed; false otherwise.</returns>
-		public bool RemovePathfinder(AttackableUnit obj)
-		{
-			return _pathfinders.Remove(obj);
-		}
-
-		/// <summary>
-		/// Function called every tick of the game by Map.cs.
-		/// </summary>
-		public void Update(float diff)
-		{
-			// TODO: Verify if this is the proper time between path updates.
-			if (pathUpdateTimer >= 3000.0f)
-			{
-				// we iterate over a copy of _pathfinders because the original gets modified
-				var objectsCopy = new List<AttackableUnit>(_pathfinders);
-				foreach (var obj in objectsCopy)
-				{
-					UpdatePaths(obj);
-				}
-
-				pathUpdateTimer = 0;
-			}
-
-			pathUpdateTimer += diff;
+			turretPathing = new TurretPathingHandler(navGrid);
 		}
 
 		/// <summary>
@@ -114,11 +75,12 @@ namespace LeagueSandbox.GameServer.Handlers
 		/// </summary>
 		public bool IsWalkable(Vector2 pos, float radius = 0)
 		{
-			bool pathable = navGrid.IsWalkable(pos, radius);
+			bool walkable = navGrid.IsWalkable(pos, radius);
 
-			
+			if (walkable)
+				walkable = !turretPathing.CheckCollision(pos, radius);
 
-			return pathable;
+			return walkable;
 		}
 
 		/// <summary>
@@ -417,7 +379,8 @@ namespace LeagueSandbox.GameServer.Handlers
 				sw.WriteLine($"{navGrid.CellSize}");
 				foreach (NavigationGridCell cell in navGrid.Cells)
 				{
-					sw.WriteLine($"{cell.ID};{cell.Flags};{cell.IsOpen};{navGrid.IsWalkable(cell)}");
+					sw.WriteLine($"{cell.GetCenter()};{cell.Flags};{cell.IsOpen};{navGrid.IsWalkable(cell)};" +
+						$"{IsWalkable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)}");
 				}
 			}
 		}

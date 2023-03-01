@@ -2,8 +2,8 @@ import numpy as np
 from PIL import Image
 
 boolean = {
-    'False': (0, 0, 0),
-    'True': (255, 255, 255)
+    'False': False,
+    'True': True,
 }
 
 with open("input/navgrid.txt", "r+") as file:
@@ -16,7 +16,13 @@ with open("input/navgrid.txt", "r+") as file:
         cells.append([])
         for y in range(0, x_count):
             line = file.readline()
-            cells[-1].insert(0, boolean[line.split(';')[-1].strip()])
+            bools = [boolean[x.strip()] for x in line.split(';')[2:]]
+            if not bools[1]:
+                cells[-1].insert(0, (0, 0, 0))
+            elif not bools[2]:
+                cells[-1].insert(0, (255, 0, 0))
+            else:
+                cells[-1].insert(0, (255, 255, 255))
 
 image_arr = np.array(cells, dtype=np.uint8)
 data = Image.fromarray(image_arr)
