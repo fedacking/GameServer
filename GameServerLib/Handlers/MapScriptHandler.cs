@@ -96,6 +96,7 @@ namespace LeagueSandbox.GameServer.Handlers
         public void Update(float diff)
         {
             CollisionHandler.Update();
+            PathingHandler.Update();
             MapScript.Update(diff);
 
             foreach (var surrender in Surrenders.Values)

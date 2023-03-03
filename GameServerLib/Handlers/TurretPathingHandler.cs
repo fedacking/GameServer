@@ -40,13 +40,6 @@ namespace GameServerLib.Handlers
 			quadTree.Insert(turret, GetBounds(turret));
 		}
 
-		public bool CheckCollision(GameObject obj)
-		{
-			if (quadTree.GetNodesInside(GetBounds(obj)).Any())
-				return true;
-			return false;
-		}
-
 		public bool CheckCollision(Vector2 position, float radius)
 		{
 			if (quadTree.GetNodesInside(GetBounds(position, radius)).Any())

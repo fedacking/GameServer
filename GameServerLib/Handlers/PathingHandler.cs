@@ -26,12 +26,14 @@ namespace LeagueSandbox.GameServer.Handlers
 		private MapScriptHandler _map;
 		private NavigationGrid navGrid;
 		public TurretPathingHandler turretPathing;
+		public UnitPathingHandler unitPathing;
 
 		public PathingHandler(MapScriptHandler map)
 		{
 			_map = map;
 			navGrid = _map.NavigationGrid;
 			turretPathing = new TurretPathingHandler(navGrid);
+			unitPathing = new UnitPathingHandler(navGrid);
 		}
 
 		/// <summary>
@@ -86,16 +88,12 @@ namespace LeagueSandbox.GameServer.Handlers
 		/// <summary>
 		/// Checks if the given position can be pathed on.
 		/// </summary>
-		public bool IsPathable(Vector2 pos, float radius = 0, bool checkObjects = false)
+		public bool IsPathable(Vector2 pos, float radius = 0, bool checkObjects = true)
 		{
-			bool pathable = navGrid.IsWalkable(pos, radius);
+			bool pathable = IsWalkable(pos, radius);
 
-			if (pathable && 
-				checkObjects && 
-				_map.CollisionHandler.GetNearestObjects(new System.Activities.Presentation.View.Circle(pos, radius)).Count > 0)
-			{
-				pathable = false;
-			}
+			if (pathable && checkObjects)
+				pathable = !unitPathing.CheckPathing(pos, radius);
 
 			return pathable;
 		}
@@ -103,9 +101,14 @@ namespace LeagueSandbox.GameServer.Handlers
 		/// <summary>
 		/// Checks if the given position can be moved into.
 		/// </summary>
-		public bool IsOpen(Vector2 pos, float radius = 0, bool checkObjects = false)
+		public bool IsOpen(Vector2 pos, float radius = 0, bool checkObjects = true)
 		{
-			return IsPathable(pos, radius, checkObjects);
+			bool pathable = IsPathable(pos, radius, checkObjects);
+
+			if (pathable && checkObjects)
+				pathable = !unitPathing.CheckCollision(pos, radius);
+
+			return pathable;
 		}
 
 		/// <summary>
@@ -155,6 +158,7 @@ namespace LeagueSandbox.GameServer.Handlers
 			var xRanges = new short[countY, 3];
 			foreach (var cell in cells)
 			{
+				if (cell == null) continue;
 				if (!IsPathable(cell.GetCenter()))
 				{
 					return true;
@@ -370,6 +374,21 @@ namespace LeagueSandbox.GameServer.Handlers
 			return returnList;
 		}
 
+		internal void AddPathfinder(AttackableUnit attackableUnit)
+		{
+			unitPathing.AddUnit(attackableUnit);
+		}
+
+		internal void RemovePathfinder(AttackableUnit attackableUnit)
+		{
+			unitPathing.RemoveUnit(attackableUnit);
+		}
+
+		internal void Update()
+		{
+			unitPathing.Update();
+		}
+
 		internal void LogPathfinding(Champion champion)
 		{
 			using (StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/navgrid.txt"))
@@ -380,7 +399,10 @@ namespace LeagueSandbox.GameServer.Handlers
 				foreach (NavigationGridCell cell in navGrid.Cells)
 				{
 					sw.WriteLine($"{cell.GetCenter()};{cell.Flags};{cell.IsOpen};{navGrid.IsWalkable(cell)};" +
-						$"{IsWalkable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)}");
+						$"{IsWalkable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)};" +
+						$"{IsPathable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)};" +
+						$"{IsOpen(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)};"
+					);
 				}
 			}
 		}

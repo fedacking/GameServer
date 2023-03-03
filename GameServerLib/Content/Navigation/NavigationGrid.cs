@@ -546,6 +546,9 @@ namespace LeagueSandbox.GameServer.Content.Navigation
         // https://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
         public IEnumerable<NavigationGridCell> GetAllCellsInLine(Vector2 v0, Vector2 v1)
         {
+            //Why does this not work???
+            yield break;
+            
             double dx = Math.Abs(v1.X - v0.X);
             double dy = Math.Abs(v1.Y - v0.Y);
 

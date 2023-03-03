@@ -314,7 +314,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 {
                     exit = _game.Map.PathingHandler.GetClosestTerrainExit(exit, PathfindingRadius + 1.0f);
                 }
-                //SetPosition(exit, true);
+                SetPosition(exit, true);
             }
         }
 
@@ -401,14 +401,24 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
         /// <returns></returns>
         public virtual bool CanMove()
         {
-            // Only case where AttackableUnit should move is if it is forced.
-            return MovementParameters != null;
-        }
+			// Only case where AttackableUnit should move is if it is forced.
+			return MovementParameters != null;
+		}
 
-        /// <summary>
-        /// Whether or not this unit can modify its Waypoints.
-        /// </summary>
-        public virtual bool CanChangeWaypoints()
+		/// <summary>
+		/// Whether or not this unit is going to move nex.
+		/// </summary>
+		/// <returns></returns>
+		public virtual bool IsMoving()
+		{
+			// Only case where AttackableUnit should move is if it is forced.
+			return CanMove() && (MovementParameters != null || CurrentWaypointKey < Waypoints.Count);
+		}
+
+		/// <summary>
+		/// Whether or not this unit can modify its Waypoints.
+		/// </summary>
+		public virtual bool CanChangeWaypoints()
         {
             // Only case where we can change waypoints is if we are being forced to move towards a target.
             return MovementParameters != null && MovementParameters.FollowNetID != 0;
@@ -1609,5 +1619,23 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 _game.PacketNotifier.NotifyS2C_SetAnimStates(this, animPairs);
             }
         }
-    }
+
+		/// <summary>
+		/// Called by ObjectManager after AddObject (usually right after instatiation of GameObject).
+		/// </summary>
+		public override void OnAdded()
+        {
+            base.OnAdded();
+            _game.Map.PathingHandler.AddPathfinder(this);
+		}
+
+		/// <summary>
+		/// Called by ObjectManager after AddObject (usually right after instatiation of GameObject).
+		/// </summary>
+		public override void OnRemoved()
+		{
+			base.OnRemoved();
+            _game.Map.PathingHandler.RemovePathfinder(this);
+		}
+	}
 }
