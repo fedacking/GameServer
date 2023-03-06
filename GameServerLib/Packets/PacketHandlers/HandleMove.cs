@@ -5,6 +5,8 @@ using System.Numerics;
 using System.Collections.Generic;
 using LeagueSandbox.GameServer.Players;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
+using LeagueSandbox.GameServer.Handlers;
+using LeagueSandbox.GameServer.API;
 
 namespace LeagueSandbox.GameServer.Packets.PacketHandlers
 {
@@ -42,29 +44,23 @@ namespace LeagueSandbox.GameServer.Packets.PacketHandlers
                     case OrderType.AttackTo:
                     case OrderType.AttackMove:
                     case OrderType.Use:
-                        if (req.Waypoints == null || req.Waypoints.Count == 0)
-                        {
-                            return false;
-                        }
+                        if (req.Waypoints == null || req.Waypoints.Count == 0) return false;
+
                         waypoints = req.Waypoints.ConvertAll(TranslateFromCenteredCoordinates);
                         //TODO: Find the nearest point on the path and discard everything before it
                         waypoints[0] = champion.Position;
                         for(int i = 0; i < waypoints.Count - 1; i++)
                         {
-                            if(pathfinder.CastCircle(waypoints[i], waypoints[i + 1], champion.PathfindingRadius, true))
+                            if(pathfinder.CastCircle(waypoints[i], waypoints[i + 1], champion.PathfindingRadius, champion, true))
                             {
                                 var ithWaypoint = waypoints[i];
                                 var lastWaypoint = waypoints[waypoints.Count - 1];
                                 var path = pathfinder.GetPath(ithWaypoint, lastWaypoint, champion, champion.PathfindingRadius);
                                 waypoints.RemoveRange(i, waypoints.Count - i);
                                 if(path != null)
-                                {
                                     waypoints.AddRange(path);
-                                }
                                 else
-                                {
                                     waypoints.Add(ithWaypoint);
-                                }
                                 break;
                             }
                         }

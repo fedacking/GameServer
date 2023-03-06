@@ -653,9 +653,9 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
                 }
                 else
                 {
-                    if (!_game.Map.PathingHandler.IsPathable(targetPos, PathfindingRadius))
+                    if (!_game.Map.PathingHandler.IsPathable(targetPos, PathfindingRadius, TargetUnit))
                     {
-                        targetPos = _game.Map.PathingHandler.GetClosestTerrainExit(targetPos, PathfindingRadius);
+                        targetPos = _game.Map.PathingHandler.GetClosestTerrainExit(targetPos, TargetUnit, PathfindingRadius);
                     }
 
                     var newWaypoints = _game.Map.PathingHandler.GetPath(Position, targetPos, this, PathfindingRadius);
@@ -893,7 +893,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
 
             if (location != Vector2.Zero)
             {
-                var exit = _game.Map.PathingHandler.GetClosestTerrainExit(location, PathfindingRadius);
+                var exit = _game.Map.PathingHandler.GetClosestTerrainExit(location, this, PathfindingRadius);
                 var path = _game.Map.PathingHandler.GetPath(Position, exit, this, PathfindingRadius);
 
                 if (path != null)

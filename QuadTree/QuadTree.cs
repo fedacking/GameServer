@@ -25,7 +25,7 @@ namespace System.Activities.Presentation.View
 	{
 		Rect bounds; // overall bounds we are indexing.
 		Quadrant? root;
-		Dictionary<T, Tuple<Quadrant, QuadNode>> map = new Dictionary<T, Tuple<Quadrant, QuadNode>>();
+		Dictionary<T, QuadNode> map = new Dictionary<T, QuadNode>();
 
 		public QuadTree(float top, float left, float width, float height)
 		{
@@ -52,7 +52,9 @@ namespace System.Activities.Presentation.View
 
 		public void Remove(T node)
 		{
-			map[node].Item1.Remove(map[node].Item2);
+			if (!map.ContainsKey(node)) return;
+			map[node].parent.Remove(map[node]);
+			map.Remove(node);
 		}
 
 		/// <summary>
@@ -104,16 +106,18 @@ namespace System.Activities.Presentation.View
 		{
 			public Circle Bounds;
 			public T Node; // the actual visual object being stored here.
+			public Quadrant parent;
 
 			/// <summary>
 			/// Construct new QuadNode to wrap the given node with given bounds
 			/// </summary>
 			/// <param name="node">The node</param>
 			/// <param name="bounds">The bounds of that node</param>
-			public QuadNode(T node, Circle bounds)
+			public QuadNode(T node, Circle bounds, Quadrant parent)
 			{
 				Node = node;
 				Bounds = bounds;
+				this.parent = parent;
 			}
 		}
 
@@ -159,7 +163,7 @@ namespace System.Activities.Presentation.View
 			/// <param name="node">The node </param>
 			/// <param name="bounds">The bounds of that node</param>
 			/// <returns></returns>
-			internal Tuple<Quadrant, QuadNode> Insert(T node, Circle bounds)
+			internal QuadNode Insert(T node, Circle bounds)
 			{
 				Debug.Assert(!bounds.isEmpty, "Cannot have empty bound");
 				if (bounds.isEmpty)
@@ -209,9 +213,9 @@ namespace System.Activities.Presentation.View
 						toInsert = child;
 					else
 					{
-						QuadNode n = new QuadNode(node, bounds);
+						QuadNode n = new QuadNode(node, bounds, toInsert);
 						toInsert.nodes.Add(n);
-						return new Tuple<Quadrant, QuadNode>(toInsert, n);
+						return n;
 					}
 				}
 

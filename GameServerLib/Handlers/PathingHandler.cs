@@ -14,6 +14,7 @@ using log4net;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
 using System.IO;
 using GameServerLib.Handlers;
+using System.Activities.Presentation.View;
 
 namespace LeagueSandbox.GameServer.Handlers
 {
@@ -27,6 +28,8 @@ namespace LeagueSandbox.GameServer.Handlers
 		private NavigationGrid navGrid;
 		public TurretPathingHandler turretPathing;
 		public UnitPathingHandler unitPathing;
+
+		private readonly GameServerCore.Enums.StatusFlags ghosted = GameServerCore.Enums.StatusFlags.Ghosted; // Slightly smaller to use in code later
 
 		public PathingHandler(MapScriptHandler map)
 		{
@@ -43,37 +46,25 @@ namespace LeagueSandbox.GameServer.Handlers
 		public void UpdatePaths(AttackableUnit obj)
 		{
 			var path = obj.Waypoints;
-			if (path.Count == 0)
-			{
-				return;
-			}
+			if (path.Count == 0) return;
 
 			var lastWaypoint = path[path.Count - 1];
-			if (obj.CurrentWaypoint.Equals(lastWaypoint) && lastWaypoint.Equals(obj.Position))
-			{
-				return;
-			}
+			if (obj.CurrentWaypoint.Equals(lastWaypoint) && lastWaypoint.Equals(obj.Position)) return;
 
-			var newPath = new List<Vector2>();
-			newPath.Add(obj.Position);
-
+			var newPath = new List<Vector2> { obj.Position };
 			foreach (Vector2 waypoint in path)
 			{
-				if (IsPathable(waypoint, obj.PathfindingRadius))
-				{
+				if (IsPathable(waypoint, obj.PathfindingRadius, obj))
 					newPath.Add(waypoint);
-				}
 				else
-				{
 					break;
-				}
 			}
 
 			obj.SetWaypoints(newPath);
 		}
 
 		/// <summary>
-		/// Checks if the given position can be walked on.
+		/// Checks if the given position can be walked on. So, there is no terrain or turrets there
 		/// </summary>
 		public bool IsWalkable(Vector2 pos, float radius = 0)
 		{
@@ -86,27 +77,27 @@ namespace LeagueSandbox.GameServer.Handlers
 		}
 
 		/// <summary>
-		/// Checks if the given position can be pathed on.
+		/// Checks if the given position can be pathed on. We check if there isn't a unit stopeed there
 		/// </summary>
-		public bool IsPathable(Vector2 pos, float radius = 0, bool checkObjects = true)
+		public bool IsPathable(Vector2 pos, float radius, AttackableUnit unit)
 		{
 			bool pathable = IsWalkable(pos, radius);
 
-			if (pathable && checkObjects)
-				pathable = !unitPathing.CheckPathing(pos, radius);
+			if (pathable && !unit.Status.HasFlag(ghosted))
+				pathable = !unitPathing.CheckPathing(pos, radius, unit);
 
 			return pathable;
 		}
 
 		/// <summary>
-		/// Checks if the given position can be moved into.
+		/// Checks if the given position can be moved into. We check if there's a unit there
 		/// </summary>
-		public bool IsOpen(Vector2 pos, float radius = 0, bool checkObjects = true)
+		public bool IsOpen(Vector2 pos, float radius, AttackableUnit unit)
 		{
-			bool pathable = IsPathable(pos, radius, checkObjects);
+			bool pathable = IsPathable(pos, radius, unit);
 
-			if (pathable && checkObjects)
-				pathable = !unitPathing.CheckCollision(pos, radius);
+			if (pathable && !unit.Status.HasFlag(ghosted))
+				pathable = !unitPathing.CheckCollision(pos, radius, unit);
 
 			return pathable;
 		}
@@ -117,7 +108,7 @@ namespace LeagueSandbox.GameServer.Handlers
 		/// <param name="location">Vector2 position to start the check at.</param>
 		/// <param name="distanceThreshold">Amount of distance away from terrain the exit should be.</param>
 		/// <returns>Vector2 position which can be pathed on.</returns>
-		public Vector2 GetClosestTerrainExit(Vector2 location, float distanceThreshold = 0)
+		public Vector2 GetClosestTerrainExit(Vector2 location, AttackableUnit unit, float distanceThreshold = 0)
 		{
 			double angle = Math.PI / 4;
 
@@ -125,7 +116,7 @@ namespace LeagueSandbox.GameServer.Handlers
 			// y = r * sin(angle)
 			// r = distance from center
 			// Draws spirals until it finds a walkable spot
-			for (int r = 1; !IsPathable(location, distanceThreshold); r++)
+			for (int r = 1; !IsPathable(location, distanceThreshold, unit); r++)
 			{
 				location.X += r * (float)Math.Cos(angle);
 				location.Y += r * (float)Math.Sin(angle);
@@ -135,7 +126,15 @@ namespace LeagueSandbox.GameServer.Handlers
 			return location;
 		}
 
-		public bool CastCircle(Vector2 orig, Vector2 dest, float radius, bool translate = true)
+		/// <summary>
+		/// Checks if a stadium shape is open for pathfinding.
+		/// </summary>
+		/// <param name="orig"></param>
+		/// <param name="dest"></param>
+		/// <param name="radius"></param>
+		/// <param name="translate"></param> Do we translate the coordinates to navgrid cells
+		/// <returns></returns>
+		public bool CastCircle(Vector2 orig, Vector2 dest, float radius, AttackableUnit unit, bool translate = true)
 		{
 			if (translate)
 			{
@@ -149,7 +148,8 @@ namespace LeagueSandbox.GameServer.Handlers
 			var cells = navGrid.GetAllCellsInRange(orig, radius, false)
 			.Concat(navGrid.GetAllCellsInRange(dest, radius, false))
 			.Concat(navGrid.GetAllCellsInLine(orig + p, dest + p))
-			.Concat(navGrid.GetAllCellsInLine(orig - p, dest - p));
+			.Concat(navGrid.GetAllCellsInLine(orig - p, dest - p))
+			.SkipWhile(e => e == null); // Ugly hack while I fix bugs
 
 			int minY = (int)(Math.Min(orig.Y, dest.Y) - tradius) - 1;
 			int maxY = (int)(Math.Max(orig.Y, dest.Y) + tradius) + 1;
@@ -159,10 +159,9 @@ namespace LeagueSandbox.GameServer.Handlers
 			foreach (var cell in cells)
 			{
 				if (cell == null) continue;
-				if (!IsPathable(cell.GetCenter()))
-				{
+				if (!IsPathable(unit.Position, unit.PathfindingRadius, unit))
 					return true;
-				}
+
 				int y = cell.Locator.Y - minY;
 				if (xRanges[y, 2] == 0)
 				{
@@ -178,15 +177,9 @@ namespace LeagueSandbox.GameServer.Handlers
 			}
 
 			for (int y = 0; y < countY; y++)
-			{
 				for (int x = xRanges[y, 0] + 1; x < xRanges[y, 1]; x++)
-				{
-					if (!IsPathable(new Vector2((short)x, (short)(minY + y))))
-					{
+					if (!IsPathable(new Vector2((short)x, (short)(minY + y)), unit.PathfindingRadius, unit))
 						return true;
-					}
-				}
-			}
 
 			return false;
 		}
@@ -194,7 +187,7 @@ namespace LeagueSandbox.GameServer.Handlers
 		/// Remove waypoints (cells) that have LOS from one to the other from path.
 		/// </summary>
 		/// <param name="path"></param>
-		public void SmoothPath(List<NavigationGridCell> path, float checkDistance = 0f)
+		public void SmoothPath(List<NavigationGridCell> path, AttackableUnit traveler, float checkDistance = 0f)
 		{
 			if (path.Count < 3)
 			{
@@ -205,7 +198,7 @@ namespace LeagueSandbox.GameServer.Handlers
 			for (int i = 2; i < path.Count; i++)
 			{
 				// If there is something between the last added point and the current one
-				if (CastCircle(path[j].GetCenter(), path[i].GetCenter(), checkDistance, false))
+				if (CastCircle(path[j].GetCenter(), path[i].GetCenter(), checkDistance, traveler, false))
 				{
 					// add previous.
 					path[++j] = path[i - 1];
@@ -249,7 +242,7 @@ namespace LeagueSandbox.GameServer.Handlers
 			var fromNav = navGrid.TranslateToNavGrid(from);
 			var cellFrom = navGrid.GetCell(fromNav, false);
 			//var goal = GetClosestWalkableCell(to, distanceThreshold, true);
-			to = GetClosestTerrainExit(to, distanceThreshold);
+			to = GetClosestTerrainExit(to, traveler, distanceThreshold);
 			var toNav = navGrid.TranslateToNavGrid(to);
 			var cellTo = navGrid.GetCell(toNav, false);
 
@@ -321,7 +314,7 @@ namespace LeagueSandbox.GameServer.Handlers
 						// close cell if not walkable or circle LOS check fails (start cell skipped as it always fails)
 						if
 						(
-							CastCircle(cellCoord, neighborCellCoord, distanceThreshold, false)
+							CastCircle(cellCoord, neighborCellCoord, distanceThreshold, traveler, false)
 						)
 						{
 							closedList.Add(neighborCell.ID);
@@ -359,7 +352,7 @@ namespace LeagueSandbox.GameServer.Handlers
 				return null;
 			}
 
-			SmoothPath(path, distanceThreshold);
+			SmoothPath(path, traveler, distanceThreshold);
 
 			var returnList = new List<Vector2>(path.Count) { from };
 
@@ -384,11 +377,6 @@ namespace LeagueSandbox.GameServer.Handlers
 			unitPathing.RemoveUnit(attackableUnit);
 		}
 
-		internal void Update()
-		{
-			unitPathing.Update();
-		}
-
 		internal void LogPathfinding(Champion champion)
 		{
 			using (StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/navgrid.txt"))
@@ -400,8 +388,8 @@ namespace LeagueSandbox.GameServer.Handlers
 				{
 					sw.WriteLine($"{cell.GetCenter()};{cell.Flags};{cell.IsOpen};{navGrid.IsWalkable(cell)};" +
 						$"{IsWalkable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)};" +
-						$"{IsPathable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)};" +
-						$"{IsOpen(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius)};"
+						$"{IsPathable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius, champion)};" +
+						$"{IsOpen(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius, champion)};"
 					);
 				}
 			}

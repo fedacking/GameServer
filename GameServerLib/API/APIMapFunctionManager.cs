@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using System.Timers;
+using static LeaguePackets.Game.Common.CastInfo;
 
 namespace LeagueSandbox.GameServer.API
 {
@@ -452,6 +453,16 @@ namespace LeagueSandbox.GameServer.API
 		public static void AddTurret(LaneTurret turret)
 		{
 			_game.Map.PathingHandler.turretPathing.InsertTurret(turret);
+		}
+
+		internal static void AddPathfinder(AttackableUnit attackableUnit)
+        {
+			_game.Map.PathingHandler.AddPathfinder(attackableUnit);
+		}
+
+		internal static void RemovePathfinder(AttackableUnit attackableUnit)
+		{
+			_game.Map.PathingHandler.RemovePathfinder(attackableUnit);
 		}
 	}
 }

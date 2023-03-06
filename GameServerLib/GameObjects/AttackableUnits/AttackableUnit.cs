@@ -212,7 +212,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 // Reevaluate our current path to account for the starting position being changed.
                 if (repath)
                 {
-                    Vector2 safeExit = _game.Map.PathingHandler.GetClosestTerrainExit(Waypoints.Last(), PathfindingRadius);
+                    Vector2 safeExit = _game.Map.PathingHandler.GetClosestTerrainExit(Waypoints.Last(), this, PathfindingRadius);
                     List<Vector2> safePath = _game.Map.PathingHandler.GetPath(Position, safeExit, this, PathfindingRadius);
 
                     // TODO: When using this safePath, sometimes we collide with the terrain again, so we use an unsafe path the next collision, however,
@@ -251,8 +251,9 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
             Replication.Update();
 
             if (CanMove())
-            {
-                float remainingFrameTime = diff;
+			{
+				ApiMapFunctionManager.RemovePathfinder(this);
+				float remainingFrameTime = diff;
                 if (MovementParameters != null)
                 {
                     remainingFrameTime = DashMove(diff);
@@ -260,10 +261,11 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 if (MovementParameters == null)
                 {
                     Move(remainingFrameTime);
-                }
-            }
+				}
+				ApiMapFunctionManager.AddPathfinder(this);
+			}
 
-            if (IsDead && _death != null)
+			if (IsDead && _death != null)
             {
                 Die(_death);
                 _death = null;
@@ -293,7 +295,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 }
 
                 // only time we would collide with terrain is if we are inside of it, so we should teleport out of it.
-                Vector2 exit = _game.Map.PathingHandler.GetClosestTerrainExit(Position, PathfindingRadius + 1.0f);
+                Vector2 exit = _game.Map.PathingHandler.GetClosestTerrainExit(Position, this, PathfindingRadius + 1.0f);
                 SetPosition(exit, false);
             }
 			else // Fedacking: Collission with units presumably?
@@ -310,9 +312,9 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
                 // We should not teleport here because Pathfinding should handle it.
                 // TODO: Implement a PathfindingHandler, and remove currently implemented manual pathfinding.
                 Vector2 exit = Extensions.GetCircleEscapePoint(Position, PathfindingRadius + 1, collider.Position, collider.PathfindingRadius);
-                if (!_game.Map.PathingHandler.IsPathable(exit, PathfindingRadius))
+                if (!_game.Map.PathingHandler.IsPathable(exit, PathfindingRadius, this))
                 {
-                    exit = _game.Map.PathingHandler.GetClosestTerrainExit(exit, PathfindingRadius + 1.0f);
+                    exit = _game.Map.PathingHandler.GetClosestTerrainExit(exit, this, PathfindingRadius + 1.0f);
                 }
                 SetPosition(exit, true);
             }
@@ -856,7 +858,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
             _movementUpdated = true;
             _teleportedDuringThisFrame = true;
 
-            position = _game.Map.PathingHandler.GetClosestTerrainExit(position, PathfindingRadius + 1.0f);
+            position = _game.Map.PathingHandler.GetClosestTerrainExit(position, this, PathfindingRadius + 1.0f);
 
             if (repath)
             {
@@ -1530,7 +1532,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
         /// TODO: Implement Dash class which houses these parameters, then have that as the only parameter to this function (and other Dash-based functions).
         public void DashToLocation(Vector2 endPos, float dashSpeed, string animation = "", float leapGravity = 0.0f, bool keepFacingLastDirection = true, bool consideredCC = true)
         {
-            var newCoords = _game.Map.PathingHandler.GetClosestTerrainExit(endPos, PathfindingRadius + 1.0f);
+            var newCoords = _game.Map.PathingHandler.GetClosestTerrainExit(endPos, this, PathfindingRadius + 1.0f);
 
             // False because we don't want this to be networked as a normal movement.
             SetWaypoints(new List<Vector2> { Position, newCoords });
@@ -1626,7 +1628,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
 		public override void OnAdded()
         {
             base.OnAdded();
-            _game.Map.PathingHandler.AddPathfinder(this);
+            ApiMapFunctionManager.AddPathfinder(this);
 		}
 
 		/// <summary>
@@ -1635,7 +1637,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits
 		public override void OnRemoved()
 		{
 			base.OnRemoved();
-            _game.Map.PathingHandler.RemovePathfinder(this);
+			ApiMapFunctionManager.RemovePathfinder(this);
 		}
 	}
 }

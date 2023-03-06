@@ -239,8 +239,8 @@ namespace LeagueSandbox.GameServer.GameObjects
             {
                 // Escape functionality should be moved to GameObject.OnCollision.
                 // only time we would collide with terrain is if we are inside of it, so we should teleport out of it.
-                Vector2 exit = _game.Map.PathingHandler.GetClosestTerrainExit(Position, PathfindingRadius + 1.0f);
-                SetPosition(exit);
+                //Vector2 exit = _game.Map.PathingHandler.GetClosestTerrainExit(Position, PathfindingRadius + 1.0f);
+                //SetPosition(exit);
             }
         }
 
@@ -403,9 +403,9 @@ namespace LeagueSandbox.GameServer.GameObjects
         /// <param name="y">Y coordinate to set.</param>
         public virtual void TeleportTo(float x, float y)
         {
-            var position = _game.Map.PathingHandler.GetClosestTerrainExit(new Vector2(x, y), PathfindingRadius + 1.0f);
+            //var position = _game.Map.PathingHandler.GetClosestTerrainExit(new Vector2(x, y), PathfindingRadius + 1.0f);
 
-            SetPosition(position);
+            SetPosition(new Vector2(x,y));
 
             // TODO: Find a suitable function for this. Maybe modify NotifyWaypointGroup to accept simple objects.
             _game.PacketNotifier.NotifyEnterVisibilityClient(this);

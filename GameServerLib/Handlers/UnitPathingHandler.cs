@@ -16,7 +16,6 @@ namespace GameServerLib.Handlers
 	{
 		QuadTree<AttackableUnit> quadTreeAll;
 		QuadTree<AttackableUnit> quadTreeStopped;
-		HashSet<AttackableUnit> units = new HashSet<AttackableUnit>();
 
 		public UnitPathingHandler(NavigationGrid navGrid)
 		{
@@ -45,7 +44,6 @@ namespace GameServerLib.Handlers
 
 		public void AddUnit(AttackableUnit unit)
 		{
-			units.Add(unit);
 			InsertUnit(unit);
 		}
 
@@ -61,43 +59,20 @@ namespace GameServerLib.Handlers
 
 		public void RemoveUnit(AttackableUnit unit)
 		{
-			units.Remove(unit);
+			quadTreeAll.Remove(unit);
+			quadTreeStopped.Remove(unit);
 		}
 
-		public void Update()
+		public bool CheckPathing(Vector2 position, float radius, AttackableUnit unit=null)
 		{
-			quadTreeAll.Clear();
-			quadTreeStopped.Clear();
-			foreach(AttackableUnit unit in units)
-			{
-				InsertUnit(unit);
-			}
-		}
-
-		public bool CheckPathing(GameObject obj)
-		{
-			if (quadTreeStopped.GetNodesInside(GetBounds(obj)).Any())
+			if (quadTreeStopped.GetNodesInside(GetBounds(position, radius)).Any(e => e != unit))
 				return true;
 			return false;
 		}
 
-		public bool CheckPathing(Vector2 position, float radius)
+		public bool CheckCollision(Vector2 position, float radius, AttackableUnit unit = null)
 		{
-			if (quadTreeStopped.GetNodesInside(GetBounds(position, radius)).Any())
-				return true;
-			return false;
-		}
-
-		public bool CheckCollision(GameObject obj)
-		{
-			if (quadTreeAll.GetNodesInside(GetBounds(obj)).Any())
-				return true;
-			return false;
-		}
-
-		public bool CheckCollision(Vector2 position, float radius)
-		{
-			if (quadTreeAll.GetNodesInside(GetBounds(position, radius)).Any())
+			if (quadTreeAll.GetNodesInside(GetBounds(position, radius)).Any(e => e != unit))
 				return true;
 			return false;
 		}

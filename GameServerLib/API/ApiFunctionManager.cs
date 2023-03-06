@@ -255,7 +255,8 @@ namespace LeagueSandbox.GameServer.API
         /// <returns>True/False</returns>
         public static bool IsWalkable(float x, float y, float checkRadius = 0)
         {
-            return _game.Map.PathingHandler.IsPathable(new Vector2(x, y), checkRadius);
+            throw new NotImplementedException();
+            //return _game.Map.PathingHandler.IsPathable(new Vector2(x, y), checkRadius);
         }
 
         /// <summary>
