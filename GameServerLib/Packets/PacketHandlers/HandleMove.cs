@@ -51,7 +51,7 @@ namespace LeagueSandbox.GameServer.Packets.PacketHandlers
                         waypoints[0] = champion.Position;
                         for(int i = 0; i < waypoints.Count - 1; i++)
                         {
-                            if(pathfinder.CastCircle(waypoints[i], waypoints[i + 1], champion.PathfindingRadius, champion, true))
+                            if(pathfinder.CastCircle(waypoints[i], waypoints[i + 1], champion.PathfindingRadius, champion))
                             {
                                 var ithWaypoint = waypoints[i];
                                 var lastWaypoint = waypoints[waypoints.Count - 1];

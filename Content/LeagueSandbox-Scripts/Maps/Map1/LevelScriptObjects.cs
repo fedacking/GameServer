@@ -152,7 +152,6 @@ namespace MapScripts.Map1
                         turret.AddStatModifier(TurretHealthModifier);
                         turret.Stats.CurrentHealth += turret.Stats.HealthPoints.Total;
                         AddTurretItems(turret, GetTurretItems(TurretItems, turret.Type));
-                        AddTurret(turret);
                     }
                 }
             }

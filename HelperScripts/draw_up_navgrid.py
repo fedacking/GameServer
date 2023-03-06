@@ -23,8 +23,6 @@ with open("input/navgrid.txt", "r+") as file:
                 cells[-1].insert(0, (255, 0, 0))
             elif not bools[3]:
                 cells[-1].insert(0, (0, 255, 0))
-            elif not bools[4]:
-                cells[-1].insert(0, (0, 0, 255))
             else:
                 cells[-1].insert(0, (255, 255, 255))
 

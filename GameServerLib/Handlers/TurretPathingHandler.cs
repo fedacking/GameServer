@@ -1,6 +1,8 @@
 ﻿using LeagueSandbox.GameServer.Content.Navigation;
 using LeagueSandbox.GameServer.GameObjects;
+using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
+using Roy_T.AStar.Primitives;
 using System;
 using System.Activities.Presentation.View;
 using System.Collections.Generic;
@@ -35,6 +37,11 @@ namespace GameServerLib.Handlers
 			return new Circle(position, Math.Max(0.5f, radius));
 		}
 
+		private Stadium GetBounds(Vector2 orig, Vector2 dest, float radius)
+		{
+			return new Stadium(orig, dest, MathF.Max(0.5f, radius));
+		}
+
 		public void InsertTurret(LaneTurret turret)
 		{
 			quadTree.Insert(turret, GetBounds(turret));
@@ -43,6 +50,13 @@ namespace GameServerLib.Handlers
 		public bool CheckCollision(Vector2 position, float radius)
 		{
 			if (quadTree.GetNodesInside(GetBounds(position, radius)).Any())
+				return true;
+			return false;
+		}
+
+		public bool CheckCollision(Vector2 orig, Vector2 dest, float radius)
+		{
+			if (quadTree.GetNodesInside(GetBounds(orig, dest, radius)).Any())
 				return true;
 			return false;
 		}

@@ -73,7 +73,7 @@ namespace System.Activities.Presentation.View
 		/// </summary>
 		/// <param name="bounds">The bounds to test</param>
 		/// <returns>List of zero or mode nodes found inside the given bounds</returns>
-		public IEnumerable<T> GetNodesInside(Circle bounds)
+		public IEnumerable<T> GetNodesInside(Shape bounds)
 		{
 			foreach (QuadNode n in GetNodes(bounds))
 			{
@@ -86,7 +86,7 @@ namespace System.Activities.Presentation.View
 		/// </summary>
 		/// <param name="bounds">The bounds to test</param>
 		/// <returns>The list of nodes intersecting the given bounds</returns>
-		IEnumerable<QuadNode> GetNodes(Circle bounds)
+		IEnumerable<QuadNode> GetNodes(Shape bounds)
 		{
 			HashSet<QuadNode> result = new HashSet<QuadNode>();
 			root?.GetIntersectingNodes(result, bounds); // root? checks if root is null

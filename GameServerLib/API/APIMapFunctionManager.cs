@@ -445,22 +445,17 @@ namespace LeagueSandbox.GameServer.API
             _game.PacketNotifier.NotifyS2C_MapPing(position, (Pings)ping);
         }
 
-		internal static void LogPathfinding(Champion champion)
+		public static void LogPathfinding(Champion champion)
 		{
             _game.Map.PathingHandler.LogPathfinding(champion);
 		}
 
-		public static void AddTurret(LaneTurret turret)
-		{
-			_game.Map.PathingHandler.turretPathing.InsertTurret(turret);
-		}
-
-		internal static void AddPathfinder(AttackableUnit attackableUnit)
+		public static void AddPathfinder(AttackableUnit attackableUnit)
         {
 			_game.Map.PathingHandler.AddPathfinder(attackableUnit);
 		}
 
-		internal static void RemovePathfinder(AttackableUnit attackableUnit)
+		public static void RemovePathfinder(AttackableUnit attackableUnit)
 		{
 			_game.Map.PathingHandler.RemovePathfinder(attackableUnit);
 		}
