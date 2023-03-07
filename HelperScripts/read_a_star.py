@@ -13,10 +13,12 @@ with open("input/a_star.txt", "r+") as in_file:
         if not "Dequed Path" in line:
             continue
         i += 1
-        color = i / 29510 * 255
+        color = int(i / 29510 * 512)
+        color_r = min(255, 512 - color)
+        color_g = min(255, color)
         cell = line.split(";")[-1].split("!")[-1].strip()
         coords = tuple(map(int, cell.split("|")))
-        cells[coords[0]][295-coords[1]] = (color, 255-color, 0)
+        cells[295-coords[1]][coords[0]] = (color_r, color_g, 0)
 
 image_arr = np.array(cells, dtype=np.uint8)
 data = Image.fromarray(image_arr)

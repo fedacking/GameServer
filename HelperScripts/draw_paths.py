@@ -13,12 +13,18 @@ with open("input/a_star.txt", "r+") as in_file:
         if not "Final Path" in line:
             continue
         line = line.strip()
-        i += 1
-        color = i / 29510 * 255
         cell = line.split(";")[-1].split("!")
         coords = list(map(lambda x: tuple(map(int, x.split("|"))), cell))
+
         for coord in coords:
-            cells[coord[0]][295-coord[1]] = (0, 255, 0)
+            i += 1
+            color = float(i) / len(coords) * 512
+            color_r = min(255, 512 - color)
+            color_g = min(255, color)
+            try:
+                cells[295-coord[1]][coord[0]] = (color_r, color_g, 0)
+            except:
+                pass
 
 image_arr = np.array(cells, dtype=np.uint8)
 data = Image.fromarray(image_arr)

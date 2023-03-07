@@ -29,7 +29,6 @@ namespace LeagueSandbox.GameServer.Handlers
 		private MapScriptHandler _map;
 		private NavigationGrid navGrid;
 		public UnitPathingHandler unitPathing;
-		private StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/a_star.txt");
 
 		public PathingHandler(MapScriptHandler map)
 		{
@@ -199,13 +198,11 @@ namespace LeagueSandbox.GameServer.Handlers
 		/// <returns>List of points forming a path in order: from -> to</returns>
 		public List<Vector2> GetPath(Vector2 from, Vector2 to, AttackableUnit traveler, float distanceThreshold = 0)
 		{
-			sw.WriteLine("Starting Path");
 			if (from == to) // From == to, we are where we want to be
 				return null;
 
 			var fromNav = navGrid.TranslateToNavGrid(from);
 			var cellFrom = navGrid.GetCell(fromNav, false);
-			//var goal = GetClosestWalkableCell(to, distanceThreshold, true);
 			to = GetClosestTerrainExit(to, traveler, distanceThreshold);
 			var toNav = navGrid.TranslateToNavGrid(to);
 			var cellTo = navGrid.GetCell(toNav, false);
@@ -222,13 +219,14 @@ namespace LeagueSandbox.GameServer.Handlers
 			var closedList = new HashSet<int> { cellFrom.ID };
 
 			priorityQueue.Enqueue((start, 0), Vector2.Distance(fromNav, toNav));
+			_logger.Debug(Vector2.Distance(fromNav, toNav));
 
 			List<NavigationGridCell> path;
 			IEnumerable<string> pathNames;
 			
 			// Meat of the Algorithm: while there are still paths to explore
 			while (true) {
-				if (!priorityQueue.TryDequeue(out var element, out _)) // no solution
+				if (!priorityQueue.TryDequeue(out var element, out var prio)) // no solution
 					return null;
 
 				float currentCost = element.Item2;
@@ -236,8 +234,6 @@ namespace LeagueSandbox.GameServer.Handlers
 
 				NavigationGridCell cell = path[path.Count - 1];
 
-				pathNames = path.Select((e, _) => $"{e.Locator.X}|{e.Locator.Y}");
-				sw.WriteLine($"Dequed Path;{currentCost};{String.Join("!", pathNames)}");
 				if (cell.ID == cellTo.ID)// found the min solution and return it (path)
 					break;
 
@@ -281,9 +277,8 @@ namespace LeagueSandbox.GameServer.Handlers
 					else
 						cost += 1.41f;
 
-					priorityQueue.Enqueue((npath, cost), cost + Vector2.Distance(neighborCellCoord, toNav));
-					pathNames = npath.Select((e, _) => $"{e.Locator.X}|{e.Locator.Y}");
-					sw.WriteLine($"Added Path;{cost};{String.Join("!", pathNames)}");
+					priorityQueue.Enqueue((npath, cost), 
+						cost + Vector2.Distance(navGrid.TranslateToNavGrid(neighborCellCoord), toNav));
 
 					closedList.Add(neighborCell.ID);
 				}
@@ -294,8 +289,6 @@ namespace LeagueSandbox.GameServer.Handlers
 				return null;
 
 			var returnList = new List<Vector2>(path.Count) { from };
-			pathNames = path.Select((e, _) => $"{e.Locator.X}|{e.Locator.Y}");
-			sw.WriteLine($"Final Path;{String.Join("!", pathNames)}");
 
 			for (int i = 1; i < path.Count - 1; i++)
 			{
@@ -306,8 +299,6 @@ namespace LeagueSandbox.GameServer.Handlers
 
 
 			SmoothPath(returnList, traveler, distanceThreshold);
-			pathNames = returnList.Select((e, _) => $"{e.X}|{e.Y}");
-			sw.WriteLine($"Smooth Path;{String.Join("!", pathNames)}");
 
 			return returnList;
 		}
