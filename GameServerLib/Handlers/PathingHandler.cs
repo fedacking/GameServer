@@ -304,10 +304,10 @@ namespace LeagueSandbox.GameServer.Handlers
 			}
 			returnList.Add(to);
 
-			pathNames = returnList.Select((e, _) => $"{e.X}|{e.Y}");
-			sw.WriteLine($"Smooth Path;{String.Join("!", pathNames)}");
 
 			SmoothPath(returnList, traveler, distanceThreshold);
+			pathNames = returnList.Select((e, _) => $"{e.X}|{e.Y}");
+			sw.WriteLine($"Smooth Path;{String.Join("!", pathNames)}");
 
 			return returnList;
 		}
