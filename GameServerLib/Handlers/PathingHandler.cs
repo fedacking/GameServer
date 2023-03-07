@@ -219,10 +219,8 @@ namespace LeagueSandbox.GameServer.Handlers
 			var closedList = new HashSet<int> { cellFrom.ID };
 
 			priorityQueue.Enqueue((start, 0), Vector2.Distance(fromNav, toNav));
-			_logger.Debug(Vector2.Distance(fromNav, toNav));
 
 			List<NavigationGridCell> path;
-			IEnumerable<string> pathNames;
 			
 			// Meat of the Algorithm: while there are still paths to explore
 			while (true) {
@@ -261,6 +259,8 @@ namespace LeagueSandbox.GameServer.Handlers
 						// if it's open but we can't come in from this direction we just continue
 						if (CastCircle(cellCoord, neighborCellCoord, distanceThreshold, traveler)) 
 							continue;
+
+						neighborCellCoord = navGrid.TranslateToNavGrid(neighborCellCoord);
 					}
 
 					// calculate the new path and cost +heuristic and add to the priority queue
@@ -277,8 +277,7 @@ namespace LeagueSandbox.GameServer.Handlers
 					else
 						cost += 1.41f;
 
-					priorityQueue.Enqueue((npath, cost), 
-						cost + Vector2.Distance(navGrid.TranslateToNavGrid(neighborCellCoord), toNav));
+					priorityQueue.Enqueue((npath, cost), cost + Vector2.Distance(neighborCellCoord, toNav));
 
 					closedList.Add(neighborCell.ID);
 				}
@@ -296,7 +295,6 @@ namespace LeagueSandbox.GameServer.Handlers
 				returnList.Add(navGrid.TranslateFromNavGrid(navGridCell.Locator));
 			}
 			returnList.Add(to);
-
 
 			SmoothPath(returnList, traveler, distanceThreshold);
 

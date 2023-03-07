@@ -13,7 +13,7 @@ with open("input/a_star.txt", "r+") as in_file:
         if not "Dequed Path" in line:
             continue
         i += 1
-        color = int(i / 29510 * 512)
+        color = int(i / 1544 * 512)
         color_r = min(255, 512 - color)
         color_g = min(255, color)
         cell = line.split(";")[-1].split("!")[-1].strip()
