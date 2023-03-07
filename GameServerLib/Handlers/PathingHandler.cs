@@ -15,6 +15,8 @@ using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
 using System.IO;
 using GameServerLib.Handlers;
 using System.Activities.Presentation.View;
+using LENet;
+using Roy_T.AStar.Paths;
 
 namespace LeagueSandbox.GameServer.Handlers
 {
@@ -27,6 +29,7 @@ namespace LeagueSandbox.GameServer.Handlers
 		private MapScriptHandler _map;
 		private NavigationGrid navGrid;
 		public UnitPathingHandler unitPathing;
+		private StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/a_star.txt");
 
 		public PathingHandler(MapScriptHandler map)
 		{
@@ -196,13 +199,9 @@ namespace LeagueSandbox.GameServer.Handlers
 		/// <returns>List of points forming a path in order: from -> to</returns>
 		public List<Vector2> GetPath(Vector2 from, Vector2 to, AttackableUnit traveler, float distanceThreshold = 0)
 		{
-			//_logger.Debug($"unit {traveler}, {traveler.NetId}, {traveler.CharData} is asking for a path");
-			if (from == to)
-			{
-				_logger.Debug("Effed start vs to");
+			sw.WriteLine("Starting Path");
+			if (from == to) // From == to, we are where we want to be
 				return null;
-			}
-
 
 			var fromNav = navGrid.TranslateToNavGrid(from);
 			var cellFrom = navGrid.GetCell(fromNav, false);
@@ -211,61 +210,44 @@ namespace LeagueSandbox.GameServer.Handlers
 			var toNav = navGrid.TranslateToNavGrid(to);
 			var cellTo = navGrid.GetCell(toNav, false);
 
-			if (cellFrom == null || cellTo == null)
-			{
-				//_logger.Debug("We didn't find cellFrom cellT");
+			if (cellFrom == null || cellTo == null) //_logger.Debug("We didn't find cellFrom cellT");
 				return null;
-			}
-			if (cellFrom.ID == cellTo.ID)
-			{
-				//_logger.Debug("Start Cell and end Cell are the same");
+			if (cellFrom.ID == cellTo.ID) //_logger.Debug("Start Cell and end Cell are the same");
 				return new List<Vector2>(2) { from, to };
-			}
 
 			// A size large enough not to relocate the array while playing Summoner's Rift
 			var priorityQueue = new PriorityQueue<(List<NavigationGridCell>, float), float>(1024);
 
-			var start = new List<NavigationGridCell>(1);
-			start.Add(cellFrom);
+			var start = new List<NavigationGridCell> { cellFrom };
+			var closedList = new HashSet<int> { cellFrom.ID };
+
 			priorityQueue.Enqueue((start, 0), Vector2.Distance(fromNav, toNav));
 
-			var closedList = new HashSet<int>();
-			closedList.Add(cellFrom.ID);
-
-			List<NavigationGridCell> path = null;
-
-			// while there are still paths to explore
-			while (true)
-			{
-				if (!priorityQueue.TryDequeue(out var element, out _))
-				{
-					// no solution
-					//_logger.Debug("No A* solution");
+			List<NavigationGridCell> path;
+			IEnumerable<string> pathNames;
+			
+			// Meat of the Algorithm: while there are still paths to explore
+			while (true) {
+				if (!priorityQueue.TryDequeue(out var element, out _)) // no solution
 					return null;
-				}
 
 				float currentCost = element.Item2;
 				path = element.Item1;
 
 				NavigationGridCell cell = path[path.Count - 1];
 
-				// found the min solution and return it (path)
-				if (cell.ID == cellTo.ID)
-				{
+				pathNames = path.Select((e, _) => $"{e.Locator.X}|{e.Locator.Y}");
+				sw.WriteLine($"Dequed Path;{currentCost};{String.Join("!", pathNames)}");
+				if (cell.ID == cellTo.ID)// found the min solution and return it (path)
 					break;
-				}
 
 				foreach (NavigationGridCell neighborCell in navGrid.GetCellNeighbors(cell))
 				{
-					// if the neighbor is in the closed list - skip
-					if (closedList.Contains(neighborCell.ID))
-					{
+					if (closedList.Contains(neighborCell.ID)) // if the neighbor is in the closed list - skip
 						continue;
-					}
 
-					Vector2 neighborCellCoord = toNav;
-					// The target point is always walkable,
-					// we made sure of this at the beginning of the function
+					Vector2 neighborCellCoord = toNav; // The target point is always walkable, we made sure of this at the beginning of the function
+
 					if (neighborCell.ID != cellTo.ID)
 					{
 						neighborCellCoord = navGrid.TranslateFromNavGrid(neighborCell.GetCenter());
@@ -274,32 +256,34 @@ namespace LeagueSandbox.GameServer.Handlers
 						if (cell.ID != cellFrom.ID)
 							cellCoord = navGrid.TranslateFromNavGrid(cell.GetCenter());
 
-						// close cell if not walkable or circle LOS check fails (start cell skipped as it always fails)
-						if(CastCircle(cellCoord, neighborCellCoord, distanceThreshold, traveler))
+						// close cell if not walkable 
+						if (!navGrid.IsWalkable(cell))
 						{
 							closedList.Add(neighborCell.ID);
 							continue;
 						}
+						// if it's open but we can't come in from this direction we just continue
+						if (CastCircle(cellCoord, neighborCellCoord, distanceThreshold, traveler)) 
+							continue;
 					}
 
 					// calculate the new path and cost +heuristic and add to the priority queue
 					var npath = new List<NavigationGridCell>(path.Count + 1);
 					foreach (var pathCell in path)
-					{
 						npath.Add(pathCell);
-					}
+
 					npath.Add(neighborCell);
 
 					// add 1 for every cell used
-					float cost = currentCost + 1
-						+ neighborCell.ArrivalCost
-						+ neighborCell.AdditionalCost;
+					float cost = currentCost + neighborCell.ArrivalCost + neighborCell.AdditionalCost;
+					if (neighborCell.Locator.X == cell.Locator.X || neighborCell.Locator.Y == cell.Locator.Y)
+						cost += 1;
+					else
+						cost += 1.41f;
 
-					priorityQueue.Enqueue(
-						(npath, cost), cost
-						+ neighborCell.Heuristic
-						+ Vector2.Distance(neighborCellCoord, toNav)
-					);
+					priorityQueue.Enqueue((npath, cost), cost + Vector2.Distance(neighborCellCoord, toNav));
+					pathNames = npath.Select((e, _) => $"{e.Locator.X}|{e.Locator.Y}");
+					sw.WriteLine($"Added Path;{cost};{String.Join("!", pathNames)}");
 
 					closedList.Add(neighborCell.ID);
 				}
@@ -307,12 +291,11 @@ namespace LeagueSandbox.GameServer.Handlers
 
 			// shouldn't happen usually
 			if (path == null)
-			{
-				_logger.Warn("path got nulled for some reason");
 				return null;
-			}
 
 			var returnList = new List<Vector2>(path.Count) { from };
+			pathNames = path.Select((e, _) => $"{e.Locator.X}|{e.Locator.Y}");
+			sw.WriteLine($"Final Path;{String.Join("!", pathNames)}");
 
 			for (int i = 1; i < path.Count - 1; i++)
 			{
@@ -321,9 +304,11 @@ namespace LeagueSandbox.GameServer.Handlers
 			}
 			returnList.Add(to);
 
+			pathNames = returnList.Select((e, _) => $"{e.X}|{e.Y}");
+			sw.WriteLine($"Smooth Path;{String.Join("!", pathNames)}");
+
 			SmoothPath(returnList, traveler, distanceThreshold);
 
-			//_logger.Debug("Good path found");
 			return returnList;
 		}
 
@@ -339,18 +324,16 @@ namespace LeagueSandbox.GameServer.Handlers
 
 		internal void LogPathfinding(Champion champion)
 		{
-			using (StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/navgrid.txt"))
+			using StreamWriter sw = File.CreateText("../../../../../HelperScripts/input/navgrid.txt");
+			sw.WriteLine($"{navGrid.CellCountX}");
+			sw.WriteLine($"{navGrid.CellCountY}");
+			sw.WriteLine($"{navGrid.CellSize}");
+			foreach (NavigationGridCell cell in navGrid.Cells)
 			{
-				sw.WriteLine($"{navGrid.CellCountX}");
-				sw.WriteLine($"{navGrid.CellCountY}");
-				sw.WriteLine($"{navGrid.CellSize}");
-				foreach (NavigationGridCell cell in navGrid.Cells)
-				{
-					sw.WriteLine($"{cell.GetCenter()};{cell.Flags};{cell.IsOpen};{navGrid.IsWalkable(cell)};" +
-						$"{IsPathable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius, champion)};" +
-						$"{IsOpen(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius, champion)};"
-					);
-				}
+				sw.WriteLine($"{cell.GetCenter()};{cell.Flags};{cell.IsOpen};{navGrid.IsWalkable(cell)};" +
+					$"{IsPathable(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius, champion)};" +
+					$"{IsOpen(navGrid.TranslateFromNavGrid(cell.GetCenter()), champion.PathfindingRadius, champion)};"
+				);
 			}
 		}
 	}
